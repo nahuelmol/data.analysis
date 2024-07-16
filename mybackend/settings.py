@@ -95,7 +95,8 @@ if not DEBUG:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-        ]
+        'littlegamesite.onrender.com'
+]
 CORS_ALLOW_CRDENTIALS = True
 CORS_ALLOW_METHODS=[
         'GET',

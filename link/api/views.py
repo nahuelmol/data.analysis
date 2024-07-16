@@ -15,10 +15,19 @@ class CreateDataSet(APIView):
             data        = request.POST
             username    = data.get('username')
             email       = data.get('email')
-
-            return HttpResponse('accessed', status=200)
+            #return HttpResponse('accessed', status=200)
+            message = {
+                    'data':'example',
+                    'status':status.HTTP_200_OK
+            }
+            return Response(message)
         else:
             return HttpResponse("there's not data", status=200)
+    def get(self, request):
+        message = {
+                'error':'not correct method GET'
+        }
+        return Response(message)
 
 class DeleteDataSet(APIView):
     def post(self, request):
