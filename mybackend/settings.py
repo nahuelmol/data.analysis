@@ -7,7 +7,9 @@ SECRET_KEY = 'django-insecure-p(axgi*evtms%%ver)@_g3c_w2@+9pn)0+bv#k0#odd8%p3kp_
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+        'https://mybackend-234b.onrender.com'
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
