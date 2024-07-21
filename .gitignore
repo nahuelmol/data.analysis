@@ -3,3 +3,4 @@ mybackend/tests
 *.sqlite3
 *.pyc
 __pycache__/
+mybackend/test_runner.py

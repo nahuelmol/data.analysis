@@ -34,4 +34,16 @@ class DeleteDataSet(APIView):
         return HttpResponse("not found get method for the link", status=404)
     def get(self, request):
         return HttpResponse("deleting", status=200)
-    
+
+
+class AddRecord(APIView):
+    def post(self, request):
+        return HttpResponse("data accepted", status=200)
+    def get(self, request):
+        return HttpResponse("adding must be a post request", status=200)
+
+class DeleteRecord(APIView):
+    def post(self, request):
+        return HttpResponse("this shouldn't be a post method", status=200)
+    def get(self, request):
+        return HttpResponse("deleting process", status=200)
