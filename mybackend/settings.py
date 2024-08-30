@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'link',
     'corsheaders',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [

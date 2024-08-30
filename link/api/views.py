@@ -3,7 +3,8 @@ from rest_framework import permissions, authentication
 
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponseNotAllowed, HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 
@@ -47,3 +48,9 @@ class DeleteRecord(APIView):
         return HttpResponse("this shouldn't be a post method", status=200)
     def get(self, request):
         return HttpResponse("deleting process", status=200)
+
+class RetrieveRecord(APIView):
+    def post(self, request):
+        return HttpResponseNotAllowed(['GET']) 
+    def get(self, request):
+        return HttpResponse("retrieving record", status=200)
