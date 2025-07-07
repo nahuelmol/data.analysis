@@ -1,3 +1,11 @@
+
+<div>
+  <img src="https://img.shields.io/github/last-commit/nahuelmol/data.analysis"/>
+  <img src="https://img.shields.io/github/languages/code-size/nahuelmol/data.analysis"/>
+  <img src="https://img.shields.io/github/languages/top/nahuelmol/data.analysis"/>
+    <img src="https://img.shields.io/github/languages/count/nahuelmol/data.analysis"/>
+</div>
+
 ## About the project
 
 This backend will receive .seg files
@@ -46,7 +54,9 @@ pip install pandas==1.3.4
 
 It's the same than downloading its wheel directly and typing:
 
+```
 pip install <example.whl>
+```
 
 Examples are:
 
