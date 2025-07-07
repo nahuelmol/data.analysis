@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 
 import datetime
-from linke.api.fs import FileReader
+from link.api.fs import FileReader
 
 class CreateDataSet(APIView):
     def post(self, request):
