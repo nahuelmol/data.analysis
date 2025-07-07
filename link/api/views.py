@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 
 import datetime
+from linke.api.fs import FileReader
 
 class CreateDataSet(APIView):
     def post(self, request):
@@ -16,11 +17,13 @@ class CreateDataSet(APIView):
             data        = request.POST
             username    = data.get('username')
             email       = data.get('email')
+            filedata    = data.get('file')
             #return HttpResponse('accessed', status=200)
             message = {
-                    'data':'example',
+                    'data':filedata,
                     'status':status.HTTP_200_OK
             }
+            FileReader(message['data'])
             return Response(message)
         else:
             return HttpResponse("there's not data", status=200)

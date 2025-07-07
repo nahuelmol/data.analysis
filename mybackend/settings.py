@@ -1,5 +1,5 @@
 from pathlib import Path
-import dj_database_url
+#import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,7 +8,8 @@ SECRET_KEY = 'django-insecure-p(axgi*evtms%%ver)@_g3c_w2@+9pn)0+bv#k0#odd8%p3kp_
 DEBUG = True
 
 ALLOWED_HOSTS = [
-        'mybackend-234b.onrender.com'
+        'mybackend-234b.onrender.com',
+        'localhost'
 ]
 TEST_RUNNER = 'mybackend.test_runner.NoDatabaseTestRunner'
 
