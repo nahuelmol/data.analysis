@@ -16,3 +16,9 @@ In this case waitress is used. It is a python pure server, ideal for web applica
 ```
 waitress-serve --port=8000 mybackend.wsgi:application
 ```
+
+### remote setting
+
+```
+git remote set-url origin https://TOKEN@github.com/OWNER/REPOSITORY.git
+```
