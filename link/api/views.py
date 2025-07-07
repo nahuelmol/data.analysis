@@ -19,11 +19,12 @@ class CreateDataSet(APIView):
             email       = data.get('email')
             filedata    = data.get('file')
             #return HttpResponse('accessed', status=200)
+            MSG = "hello " + username
             message = {
-                    'data':filedata,
+                    'data':MSG,
                     'status':status.HTTP_200_OK
             }
-            FileReader(message['data'])
+            FileReader(filedata)
             return Response(message)
         else:
             return HttpResponse("there's not data", status=200)
