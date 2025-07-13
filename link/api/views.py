@@ -21,16 +21,21 @@ class CreateDataSet(APIView):
             #return HttpResponse('accessed', status=200)
             MSG = "hello " + username
             message = {
-                    'data':MSG,
+                    'msg':MSG
+                    'data':None,
                     'status':status.HTTP_200_OK
             }
-            FileReader(filedata)
+            image, res = FileReader(filedata)
+            if res:
+                message['data'] = image
+            else:
+                message['msg'] = 'the image cannot be obtained'
             return Response(message)
         else:
             return HttpResponse("there's not data", status=200)
     def get(self, request):
         message = {
-                'error':'not correct method GET'
+                'error':'not allowed method GET'
         }
         return Response(message)
 
