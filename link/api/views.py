@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework import permissions, authentication
+from rest_framework import permissions, authentication, Response
 
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -32,7 +32,7 @@ class CreateDataSet(APIView):
                 message['msg'] = 'the image cannot be obtained'
             return Response(message)
         else:
-            return HttpResponse("there's not data", status=200)
+            return HttpResponse("there's not data received", status=200)
     def get(self, request):
         message = {
                 'error':'not allowed method GET'

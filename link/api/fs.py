@@ -2,6 +2,8 @@ import pandas as pd
 import segysak
 import xarray as xr
 
+#fileobject is the file-like object
+
 def filetype(filename, form):
     ending = ''
     for each in filename[::-1]:
@@ -16,9 +18,11 @@ def filetype(filename, form):
 
 def CSVreader(fileobject):
     df = pd.read_csv(fileobjetc, sep=';', encoding='utf-8')
-    print(df.info())
-    print(df.head())
-    print(df.describe())
+    #data cleaning
+    ndf = replace_na(df, 'mean')
+    #print(df.info())
+    #print(df.head())
+    #print(df.describe())
 
 def SEGYreader(fileobject, demand):
     from segysak.segy import segy_header_scan
@@ -71,6 +75,4 @@ def FileReader(fileobject):
     else:
         print("filetype is not recognized")
         return None, False
-
-        
 
