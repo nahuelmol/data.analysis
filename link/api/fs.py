@@ -1,28 +1,25 @@
 import pandas as pd
 import segysak
 import xarray as xr
+import filetype
+import base64
 
 #fileobject is the file-like object
 
-def filetype(filename, form):
-    ending = ''
-    for each in filename[::-1]:
-        ending.push(each)
-        if each == '.':
-            break
-    myformat = ending[::-1]
+def filetype(file_str, form):
+    decode = base64.b64decode(file_str)
+    kind = filetype.guess(decoded)
+    myformat = ''
+    if kind:
+        myformat = kind.extension
     if(myformat == form):
-        return true
+        return True
     else:
-        return false
+        return False
 
 def CSVreader(fileobject):
     df = pd.read_csv(fileobjetc, sep=';', encoding='utf-8')
-    #data cleaning
     ndf = replace_na(df, 'mean')
-    #print(df.info())
-    #print(df.head())
-    #print(df.describe())
 
 def SEGYreader(fileobject, demand):
     from segysak.segy import segy_header_scan
@@ -60,19 +57,45 @@ def TARreader(fileobject):
         #'r:*' mode that detects the compression (gz, bz2, etc)
         tar_ref.extractall(extract_to)
 
-def FileReader(fileobject):
-    filename = fileobject.filename
-    if filetype(filename, 'csv'):
-        return CSVreader(fileobject), True
-    elif filetype(filename, 'dat'):
-        return DATreader(fileobject), True
-    elif filetype(filename, 'segy'):
-        return SEGYreader(fileobject), True
-    elif filetype(filename, 'zip'):
-        return ZIPreader(fileobject), True
-    elif filetype(filename, 'tar'):
-        return TARreader(fileobject), True
+def isvalid_base64(s):
+    try:
+        base64.b64decode(s, validate=True)
+        return True
+    except Exception:
+        return False
+
+def ValidateFile(file):
+    if file == None:
+        return False, 'None file'
+    elif file == '':
+        return False, 'empty string'
+    elif type(file) != 'str':
+        return False, 'wrong file type'
+    elif type(file) == 'str':
+        base64_file = file.encode('utf-8')
+        if isvalid_base64(base64_file):
+            return True, 'valid base64 file'
+        else:
+            return False, 'the file is not a valid base64'
     else:
-        print("filetype is not recognized")
+        return False, 'something went wrong'
+
+
+def FileReader(file_str):
+    res, msg = ValidateFile(file_str)
+    if res == False:
+        return msg, False 
+    if filetype(file_str, 'csv'):
+        return CSVreader(file_str), True
+    elif filetype(file_str, 'dat'):
+        return DATreader(file_str), True
+    elif filetype(file_str, 'segy'):
+        return SEGYreader(file_str), True
+    elif filetype(file_str, 'zip'):
+        return ZIPreader(file_str), True
+    elif filetype(file_str, 'tar'):
+        return TARreader(file_str), True
+    else:
+        print("Filetype not recognized")
         return None, False
 

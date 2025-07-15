@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
-from rest_framework import permissions, authentication, Response
+from rest_framework import permissions, authentication 
+from rest_framework.response import Response
 
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -18,21 +19,24 @@ class CreateDataSet(APIView):
             username    = data.get('username')
             email       = data.get('email')
             filedata    = data.get('file')
-            #return HttpResponse('accessed', status=200)
             MSG = "hello " + username
-            message = {
-                    'msg':MSG
+            response = {
+                    'msg':MSG,
                     'data':None,
                     'status':status.HTTP_200_OK
             }
-            image, res = FileReader(filedata)
-            if res:
-                message['data'] = image
+            image, worked = FileReader(filedata)
+            if worked:
+                response['data'] = image
             else:
-                message['msg'] = 'the image cannot be obtained'
-            return Response(message)
+                response['msg'] = f"File cannot be process"
+            return Response(response)
         else:
-            return HttpResponse("there's not data received", status=200)
+            response = {
+                    'msg':"there's not data to work with"
+            }
+            return Response(response)
+            #return HttpResponse("there's not data to work with", status=200)
     def get(self, request):
         message = {
                 'error':'not allowed method GET'
