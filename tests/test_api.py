@@ -1,6 +1,7 @@
 import base64
 import json
 from io import BytesIO
+import filetype
 
 from django.test import TestCase
 from django.urls import reverse, resolve
@@ -11,6 +12,7 @@ from rest_framework.settings import api_settings
 from rest_framework.parsers import JSONParser
 
 from link.api.views import CreateDataSet
+from link.api.unziper import unzip
 
 def success(msg):
     print(msg + ' -> ' + f"\033[32m Success\033[0m")
@@ -88,8 +90,21 @@ class APITests(TestCase):
         else:
             msg = f"{msg}:\nstatus code: {response.status_code}"
             err(msg)
-    def test_look_view(self):
-        pass
+    def test_unziper(self):
+        filepath = "tests/ninja.zip"
+        file = ''
+        with open(filepath, 'rb') as f:
+            file_data = f.read()
+            base64_data = base64.b64encode(file_data).decode('utf-8')
+            file = base64_data
+        res, cnt = unzip(file)
+        if res:
+            if (filetype.guess(cnt).extension == 'str'):
+                success('correct received file type')
+            else:
+                err('wrong file type received')
+        else:
+            err('something went wrong')
 
     def test_delete_set(self):
         response = self.client.get(reverse('linkapp:delete-set'))
