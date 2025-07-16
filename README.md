@@ -11,6 +11,8 @@
 This backend will receive .seg files
 and process them by using different. Python is chosen for the implementation, taking advantage of its capabilities in data analysis.
 
+Beyond seismic files, spreadsheets (.csv .tsv .xlsx) will be also studied applying data analysis techniques to reveal hidden patterns not evident at first glance.
+
 ## Specialized libraries
 In addition to Python's data analysis tools, specialized libraries are used to handle SEG files. Examples are:
 
