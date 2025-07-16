@@ -1,5 +1,6 @@
 venv
 mybackend/tests
+static
 *.sqlite3
 *.pyc
 __pycache__/
