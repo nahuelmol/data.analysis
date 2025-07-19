@@ -3,8 +3,6 @@ import zipfile
 from io import BytesIO
 import filetype
 
-#from link.api.errs import WrongFileType
-
 def unzip(file_str):
     bytes_file = base64.b64decode(file_str)
     file_like = BytesIO(bytes_file)

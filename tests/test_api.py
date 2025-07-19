@@ -13,6 +13,7 @@ from rest_framework.parsers import JSONParser
 
 from link.api.views import CreateDataSet
 from link.api.unziper import unzip
+from link.api.fs import FileReader
 
 def success(msg):
     print(msg + ' -> ' + f"\033[32m Success\033[0m")
@@ -106,6 +107,20 @@ class APITests(TestCase):
         else:
             err('something went wrong')
 
+    def test_file_reader(self):
+        filepath = "tests/Line_301_PSTM_Stack_Enh.segy"
+        file_str = ''
+        with open(filepath, 'rb') as f:
+            file_data = f.read()
+            file_str = base64.b64encode(file_data).decode('utf-8')
+        res, image = FileReader(file_str)
+        msg = "FileReader"
+        if res:
+            ext = type(image)
+            success(msg)
+        else:
+            msg = f"not a file worked"
+            err(msg)
     def test_delete_set(self):
         response = self.client.get(reverse('linkapp:delete-set'))
         try:

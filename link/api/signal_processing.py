@@ -43,15 +43,26 @@ def Details(signal):
     plt.ylabel("Amplitude")
     plt.show()
 
-def FrecFilter(signal, sr):
+def FrecFilter(V3D, sr):
+    #the cut frequency must be established in the frontend
+    ntrace, nsamples = V3D.shape
+    trace_name, sample_name = V3D.dims #hipotetic names
+    new_dataset = xr.DataArray( np.zeros((n,m)),
+                                dims=['trace', 'time'],
+                                coords={'trace':np.arange(n),
+                                   'time':np.arange(m)}
+                                )
     f_cut = 25
     butt_order = 15
     nyquist_freq = 0.5 * sr
     frec_norm = f_cut / nyquist_freq
     b, a = butter(butt_order, frec_norm, btype='low', analog=False)
-    #aplying the filter
-    filtered = lfilter(b,a, signal)
+    for i in range(ntrace):
+        signal = V3D.isel(trace_name=i)
+        filtered = lfilter(b,a, signal)
+        new_dataset.isel(trace=filtered)
+    return new_dataset
 
 
-
-
+def NMOFilter(V3D):
+    pass
