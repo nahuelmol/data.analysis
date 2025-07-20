@@ -14,6 +14,7 @@ from rest_framework.parsers import JSONParser
 from link.api.views import CreateDataSet
 from link.api.unziper import unzip
 from link.api.fs import FileReader
+from link.api.grapher import do2dGraph
 
 def success(msg):
     print(msg + ' -> ' + f"\033[32m Success\033[0m")
@@ -121,6 +122,21 @@ class APITests(TestCase):
         else:
             msg = f"not a file worked"
             err(msg)
+    def test_2d_graph(sel):
+        import pandas as pd
+        data = [
+                {"lat":-34.6037,    "lon":-58.3816,     "temperature":22.5},
+                {"lat":-34.6090,    "lon":-58.3845,     "temperature":28.1},
+                {"lat":-34.6123,    "lon":-58.3901,     "temperature":30.2},
+                {"lat":-34.6167,    "lon":-58.3932,     "temperature":18.7},
+                {"lat":-34.6200,    "lon":-58.3970,     "temperature":20.3}
+            ]
+        with_progresiva = do2dGraph(pd.DataFrame(data))
+        if(isinstance(with_progresiva['progresiva'], pd.Series)): 
+            success('it has a progresiva now')
+        else:
+            err('some or both datasets are not lists')
+
     def test_delete_set(self):
         response = self.client.get(reverse('linkapp:delete-set'))
         try:

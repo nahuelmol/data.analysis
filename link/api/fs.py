@@ -6,6 +6,7 @@ import base64
 from io import BytesIO
 
 import segyio
+#from link.api.grapher import do2dGraph
 #fileobject is the file-like object
 
 def issegyio(bin_data):
@@ -53,7 +54,7 @@ def FileType(file_str, form):
 
 def CSVreader(file_str):
     df = pd.read_csv(file_str, sep=';', encoding='utf-8')
-    ndf = replace_na(df, 'mean')
+    #_2dGraph(file_str)
 
 def SEGYreader(file_str, demand):
     from segysak.segy import segy_header_scan
