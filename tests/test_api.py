@@ -131,11 +131,22 @@ class APITests(TestCase):
                 {"lat":-34.6167,    "lon":-58.3932,     "temperature":18.7},
                 {"lat":-34.6200,    "lon":-58.3970,     "temperature":20.3}
             ]
-        with_progresiva = do2dGraph(pd.DataFrame(data))
+        with_progresiva, json_res = do2dGraph(pd.DataFrame(data))
         if(isinstance(with_progresiva['progresiva'], pd.Series)): 
             success('it has a progresiva now')
         else:
             err('some or both datasets are not lists')
+
+        json_dict = json.loads(json_res)
+        if(isinstance(json_dict, dict)):
+            msg = f"{json_dict['name']} creation"
+            if (json_dict['name']):
+                if (json_dict['image_base64'] is not None):
+                    success(msg)
+                else:
+                    err(msg)
+            else:
+                err(msg)
 
     def test_delete_set(self):
         response = self.client.get(reverse('linkapp:delete-set'))

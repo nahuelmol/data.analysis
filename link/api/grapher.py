@@ -46,15 +46,62 @@ def setType(data):
             data[col][idx] = float(dat)
     return data
 
-def buildPlots(data):
-    pass
+def buildPlot(data, namefile):
+    import matplotlib.pyplot as plt
+    data['temperature']
+    data['progresiva']
+    plt.plot(data['progresiva'], data['temperature'], 
+             marker='o',
+             color='blue')
+    plt.xlabel('Locations (m)')
+    plt.ylabel('Temperature (C°)')
+    plt.title('Temperature vs Distance')
+    plt.grid(True)
+    plt.savefig(namefile, dpi=300)
+
+def fileexists(filename):
+    import os
+    if os.path.exists(filename):
+        return True
+    else:
+        return False
+
+def imageConverter(filename):
+    filename = filename + '.png'
+    try:
+        with open(filename, 'r') as f:
+            encoded_str = base64.b64encode(filename.read()).decode('utf-8')
+            return True, encode_str
+    except:
+        return False, None
+
 
 def do2dGraph(data):
-    lats = []
-    lons = []
-
+    import json
     data = setType(data)
+    DICT = {
+            "name":"",
+            "image_base64":"",
+            "message": ""
+    }
     data['progresiva'] = Progresiva(data['lat'], data['lon'])
-    buildPlot(data)
+    filename = 'tvd.png'
+    buildPlot(data, filename)
+    if not fileexists(filename):
+        message = 'plot file cannot be created'
+    else:
+        print('plot file was created: ', filename, '.png')
+        #convert to binary
+        #send json with binary injected
+        res, str_png = imageConverter(filename)
+        if res:
+            DICT['imagen_base64'] = str_png
+            DICT['name'] = filename
+            DICT['message'] = "file converted successfully"
+        else:
+            DICT['imagen_base64'] = None
+            DICT['name'] = filename
+            DICT['message'] = "file cannot be converted"
+    json_str = json.dumps(DICT)   
+    return data, json_str
 
-    return data
