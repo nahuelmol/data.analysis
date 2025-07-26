@@ -19,15 +19,39 @@ class CreateDataSet(APIView):
             username    = data.get('username')
             email       = data.get('email')
             filedata    = data.get('file')
+            filekind    = data.get('filekind')
+
+            pca         = data.get('pca')
+            complete    = data.get('complete')
+            basics      = data.get('basics')
+            process     = ''
+            params      = {}
+            if(pca):
+                process = 'pca'
+                params['target'] = data.get('target')
+                params['ncomps'] = data.get('ncomps')
+                params['process'] = 'pca'
+            elif (complete):
+                process = 'complete'
+                params['pcavars'] = data.get('pcavars')
+                params['process'] = 'complete'
+            elif (basics):
+                process = 'basics'
+                params['target']    = data.get['target'] 
+                params['process']   = 'basics'
+            else:
+                process = ''
             MSG = "hello " + username
             response = {
                     'msg':MSG,
                     'data':None,
-                    'status':status.HTTP_200_OK
+                    'status':status.HTTP_200_OK,
+                    'process':process,
+                    'filekind':filekind
             }
-            image, worked = FileReader(filedata)
+            worked, report = FileReader(filedata, params)
             if worked:
-                response['data'] = image
+                response['report'] = report
             else:
                 response['msg'] = f"File cannot be process"
             return Response(response)

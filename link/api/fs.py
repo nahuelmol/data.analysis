@@ -52,9 +52,27 @@ def FileType(file_str, form):
         else:
             return False
 
-def CSVreader(file_str):
-    df = pd.read_csv(file_str, sep=';', encoding='utf-8')
-    #_2dGraph(file_str)
+def CSVreader(file_str, params):
+    bytes_file      = base64.b64encode(file_str)
+    bin_fl_object   = BytesIO(bytes_file) #binary file-like object
+    data            = pd.read_csv(bin_fl_object, sep=';', encoding='utf-8')
+
+    if params['process'] == 'complete':
+        do2dGraph(file_str)
+        report['pca_report'] = PCAnalysis(data, params)
+        report['ica_report'] = ICAnalysis(data, params)
+        report['basics_report'] = Basics(file_str, params)
+    elif params['process'] == 'nothing':
+        report = do2dGraph(file_str)
+        return True, report
+    elif params['process'] == 'basics':
+        report = Basics(file_str, params)
+        #define target
+        return True, report
+    elif process == 'pca':
+        report = PCAnalysis(data, params)
+        return True, report
+    return report
 
 def SEGYreader(file_str, demand):
     from segysak.segy import segy_header_scan
@@ -124,25 +142,29 @@ def ValidateFile(file_str):
         return False, 'something went wrong'
 
 
-def FileReader(file_str):
+def FileReader(file_str, params):
     res, msg = ValidateFile(file_str) #is or not a file
     if res == False:
         return False, msg
 
     if FileType(file_str, 'csv'):
-        return CSVreader(file_str), True
+        res, report = CSVreader(file_str, params), True
+        return True, report
     elif FileType(file_str, 'dat'):
-        return DATreader(file_str), True
+        res, report = DATreader(file_str, params), True
+        return True, report
     elif FileType(file_str, 'segy'):
-        res, image = SEGYreader(file_str)
+        res, report = SEGYreader(file_str, params)
         if res:
-            return True, image
+            return True, report
         else:
             return False, 'no possible'
     elif FileType(file_str, 'zip'):
-        return ZIPreader(file_str), True
+        res, report = ZIPread(file_str)
+        return True, report
     elif FileType(file_str, 'tar'):
-        return TARreader(file_str), True
+        res, report = TARreader(file_str)
+        return True, report
     else:
         return False, 'Filetype not recognized' 
 
