@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/github/last-commit/nahuelmol/data.analysis"/>
   <img src="https://img.shields.io/github/languages/code-size/nahuelmol/data.analysis"/>
   <img src="https://img.shields.io/github/languages/top/nahuelmol/data.analysis"/>
-    <img src="https://img.shields.io/github/languages/count/nahuelmol/data.analysis"/>
+  <img src="https://img.shields.io/github/languages/count/nahuelmol/data.analysis"/>
 </div>
 
 ## About the project
@@ -19,6 +19,10 @@ In addition to Python's data analysis tools, specialized libraries are used to h
 *segysak
 
 *segyio
+
+Once a SEGY file arrives to the server, varied chart image are generated in .png format. Being as, the type of processing can be selected, the number of those images vary. 
+
+Being a APIrest based on json, png files must be converted to string files and finally be injected to the response json.
 
 ## Running the server
 
@@ -48,7 +52,7 @@ git remote set-url origin https://TOKEN@github.com/OWNER/REPOSITORY.git
 
 ### Old versions
 
-For CPU older versions like windows 7 32 bits, older libraries were used. Thid is the cade of Pandas, Numpy, Scipy, h5py, among others. Which can be installed by typing:
+For CPU older versions like windows 7 32 bits, older libraries were used. Thid is the case of Pandas, Numpy, Scipy, h5py, among others. Which can be installed with pip by indicating their specific version:
 
 ```
 pip install pandas==1.3.4
