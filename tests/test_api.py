@@ -17,25 +17,36 @@ from link.api.fs import FileReader
 from link.api.grapher import do2dGraph
 
 def success(msg):
-    print(msg + ' -> ' + f"\033[32m Success\033[0m")
+    print(msg + ' -> ' + f"\033[32m PASSED\033[0m")
 
 def err(msg):
-    print(msg + ' -> ' + f"\033[31m Fail\033[0m")
+    print(msg + ' -> ' + f"\033[31m FAILED\033[0m")
 
 class APITests(TestCase):
     def test_api_dj(self):
         # testing requests
         factory = APIRequestFactory()
-        filepath = "tests/Line_301_PSTM_Stack_Enh.segy"
+        #filepath = "tests/Line_301_PSTM_Stack_Enh.segy"
+        filepath = "tests/NBA_2324_players.csv"
         file = ''
         with open(filepath, 'rb') as f:
             file_data = f.read()
             base64_data = base64.b64encode(file_data).decode('utf-8')
             file = base64_data
         data = {
+                'email':'molinahuel44@gmail.com',
                 'username':'nahuelmol',
-                'file':file
-                }
+                'file':file,
+                'filekind':'csv',
+                'target':'RANK',
+                'ncomps':2,
+                'pca': True,
+                'ica': False,
+                'complete':False,
+                'basics': False,
+                'ydata':'PPG',
+                'xdata':'AGE',
+        }
         url = reverse('linkapp:create-set')
         request = factory.post(
                 url,
@@ -49,14 +60,6 @@ class APITests(TestCase):
                 'encoding': 'utf-8'
                 }
         msg = f"requesting to {url}"
-        #if req.method == 'POST':
-        #    req_data = parser.parse(req.stream, parser_context)
-        #    if req_data.get('username'):
-        #        if req_data.get('file'):
-        #            success(msg)
-        #else:
-        #    err(msg)
-
         view = CreateDataSet.as_view()
         response = view(request)
         msg = 'CreateDataSet view'
@@ -70,23 +73,31 @@ class APITests(TestCase):
     def test_push_data(self):
         # testing as a common post
         client = APIClient()
-        filepath = "tests/Line_301_PSTM_Stack_Enh.segy"
-        file = ''
+        #filepath = "tests/Line_301_PSTM_Stack_Enh.segy"
+        filepath = "tests/NBA_2324_players.csv"
+        str_file = ''
         with open(filepath, 'rb') as f:
             file_data = f.read()
-            base64_data = base64.b64encode(file_data).decode('utf-8')
-            file = base64_data
+            str_file = base64.b64encode(file_data).decode('utf-8')
+            with open('data.txt', 'w') as writein:
+                writein.write(str_file)
         data = {
                 'username':'nahuel',
                 'email':'molinahuel44@gmail.com',
-                'file':file,
-                }
+                'file':str_file,
+                'filekind':'csv',
+                'pca': 1,
+                'ica': 0,
+                'complete':0,
+                'basics': 0,
+                'target': 'RANK',
+                'ncomps': 2
+        }
         url = reverse('linkapp:create-set'),
         response = client.post( url,
                                 data=data,
                                 format='json')
         msg = f"response from  {url}"
-        print(response)
         if response.status_code == 200:
             success(msg)
         else:
@@ -122,7 +133,7 @@ class APITests(TestCase):
         else:
             msg = f"not a file worked"
             err(msg)
-    def test_2d_graph(sel):
+    def test_2d_graph(self):
         import pandas as pd
         data = [
                 {"lat":-34.6037,    "lon":-58.3816,     "temperature":22.5},
@@ -131,7 +142,7 @@ class APITests(TestCase):
                 {"lat":-34.6167,    "lon":-58.3932,     "temperature":18.7},
                 {"lat":-34.6200,    "lon":-58.3970,     "temperature":20.3}
             ]
-        with_progresiva, json_res = do2dGraph(pd.DataFrame(data))
+        with_progresiva, json_res = do2dGraph(pd.DataFrame(data), 'temperature')
         if(isinstance(with_progresiva['progresiva'], pd.Series)): 
             success('it has a progresiva now')
         else:

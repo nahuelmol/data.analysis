@@ -6,10 +6,10 @@ import base64
 from io import BytesIO
 
 import segyio
-#from link.api.grapher import do2dGraph
-#fileobject is the file-like object
+from link.api.grapher import do2dGraph
+from link.api.data_analysis import PCAnalysis, ICAnalysis, Basics
 
-def issegyio(bin_data):
+def issegy(bin_data):
     try:
         with open('temp.segy', 'wb') as f:
             f.write(bin_data)
@@ -20,15 +20,12 @@ def issegyio(bin_data):
 def iscsv(bin_data):
     text = bin_data.decode("utf-8", errors="ignore")
     lines = text.splitlines()
-    if len(lines) > 2:
-        return False
     sep = ","
-    aux = 0
+    ncols = len(lines[0].split(sep))
     for line in lines:
         col = len(line.split(sep))
-        if col != aux:
+        if col != ncols:
             return False
-        aux = col
     return True
 
 def FileType(file_str, form):
@@ -39,7 +36,7 @@ def FileType(file_str, form):
     if kind is None:
         #not recognized type
         #plain text for csv dat
-        res_seg = issegyio(bin_data)
+        res_seg = issegy(bin_data)
         if res_seg:
             return True
         res_csv = iscsv(bin_data)
@@ -53,26 +50,30 @@ def FileType(file_str, form):
             return False
 
 def CSVreader(file_str, params):
-    bytes_file      = base64.b64encode(file_str)
+    bytes_file      = base64.b64decode(file_str)
     bin_fl_object   = BytesIO(bytes_file) #binary file-like object
-    data            = pd.read_csv(bin_fl_object, sep=';', encoding='utf-8')
-
+    data            = pd.read_csv(bin_fl_object, sep=',', encoding='latin1')
+    report = {}
     if params['process'] == 'complete':
-        do2dGraph(file_str)
+        report['2dgraph'] = do2dGraph(data, params)
         report['pca_report'] = PCAnalysis(data, params)
         report['ica_report'] = ICAnalysis(data, params)
-        report['basics_report'] = Basics(file_str, params)
+        report['basics_report'] = Basics(data, params)
+        return True, report
     elif params['process'] == 'nothing':
-        report = do2dGraph(file_str)
+        report['2dgraph'] = do2dGraph(data, params)
         return True, report
     elif params['process'] == 'basics':
-        report = Basics(file_str, params)
+        report['basics_report'] = Basics(data, params)
+        report['2dgraph'] = do2dGraph(data, params)
         #define target
         return True, report
-    elif process == 'pca':
-        report = PCAnalysis(data, params)
+    elif params['process'] == 'pca':
+        report['2dgraph'] = do2dGraph(data, params)
+        report['pca_report'] = PCAnalysis(data, params)
         return True, report
-    return report
+    else:
+        return False, None
 
 def SEGYreader(file_str, demand):
     from segysak.segy import segy_header_scan

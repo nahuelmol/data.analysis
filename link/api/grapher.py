@@ -37,6 +37,7 @@ def Progresiva(lats, lons):
 
 def setType(data):
     current = ''
+    print(type(data))
     if (data['lat'].dtype != 'float64'):
         current = data['lat'].dtype
     lats = []
@@ -46,11 +47,11 @@ def setType(data):
             data[col][idx] = float(dat)
     return data
 
-def buildPlot(data, namefile):
+def buildPlot(data, namefile, ydata):
     import matplotlib.pyplot as plt
-    data['temperature']
-    data['progresiva']
-    plt.plot(data['progresiva'], data['temperature'], 
+    Y = data[ydata] #temperature
+    X = data['xdata']
+    plt.plot(X, Y, 
              marker='o',
              color='blue')
     plt.xlabel('Locations (m)')
@@ -71,22 +72,27 @@ def imageConverter(filename):
     try:
         with open(filename, 'r') as f:
             encoded_str = base64.b64encode(filename.read()).decode('utf-8')
-            return True, encode_str
+            return True, encoded_str
     except:
         return False, None
 
 
-def do2dGraph(data):
+def do2dGraph(data, params):
     import json
-    data = setType(data)
+    if (params['xdata'] == 'progresiva'):
+        data = setType(data)
     DICT = {
             "name":"",
             "image_base64":"",
             "message": ""
     }
-    data['progresiva'] = Progresiva(data['lat'], data['lon'])
+
+    if (params['xdata'] == 'progresiva'):
+        data['xdata'] = Progresiva(data['lat'], data['lon'])
+    else:
+        data['xdata'] = data[params['xdata']]
     filename = 'tvd.png'
-    buildPlot(data, filename)
+    buildPlot(data, filename, params['ydata'])
     if not fileexists(filename):
         message = 'plot file cannot be created'
     else:
