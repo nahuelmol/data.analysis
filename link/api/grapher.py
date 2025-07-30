@@ -1,3 +1,4 @@
+import base64
 def Progresiva(lats, lons):
     import math
     x_ax = [0.0]
@@ -68,20 +69,18 @@ def fileexists(filename):
         return False
 
 def imageConverter(filename):
-    filename = filename + '.png'
     try:
-        with open(filename, 'r') as f:
-            encoded_str = base64.b64encode(filename.read()).decode('utf-8')
+        with open(filename, 'rb') as f:
+            encoded_str = base64.b64encode(f.read()).decode('utf-8')
             return True, encoded_str
-    except:
+    except Exception as e:
+        print("e:", e)
         return False, None
 
-
 def do2dGraph(data, params):
-    import json
     if (params['xdata'] == 'progresiva'):
         data = setType(data)
-    DICT = {
+    REPORT = {
             "name":"",
             "image_base64":"",
             "message": ""
@@ -94,20 +93,20 @@ def do2dGraph(data, params):
     filename = 'tvd.png'
     buildPlot(data, filename, params['ydata'])
     if not fileexists(filename):
-        message = 'plot file cannot be created'
+        REPORT['name'] = filename
+        REPORT['imagen_base64'] = None
+        REPORT['message'] = 'plot file cannot be created'
+        return False, REPORT
     else:
-        print('plot file was created: ', filename, '.png')
-        #convert to binary
-        #send json with binary injected
+        print('plot file was created: ', filename)
         res, str_png = imageConverter(filename)
         if res:
-            DICT['imagen_base64'] = str_png
-            DICT['name'] = filename
-            DICT['message'] = "file converted successfully"
+            REPORT['name'] = filename
+            REPORT['imagen_base64'] = str_png
+            REPORT['message'] = "file converted successfully"
         else:
-            DICT['imagen_base64'] = None
-            DICT['name'] = filename
-            DICT['message'] = "file cannot be converted"
-    json_str = json.dumps(DICT)   
-    return data, json_str
+            REPORT['name'] = filename
+            REPORT['imagen_base64'] = None
+            REPORT['message'] = "file cannot be converted"
+    return True, REPORT
 

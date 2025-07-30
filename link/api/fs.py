@@ -8,6 +8,7 @@ from io import BytesIO
 import segyio
 from link.api.grapher import do2dGraph
 from link.api.data_analysis import PCAnalysis, ICAnalysis, Basics
+from segprocess.signal_processing import FFilter
 
 def issegy(bin_data):
     try:
@@ -38,10 +39,12 @@ def FileType(file_str, form):
         #plain text for csv dat
         res_seg = issegy(bin_data)
         if res_seg:
-            return True
+            if (form == 'segy'):
+                return True
         res_csv = iscsv(bin_data)
         if res_csv:
-            return True
+            if (form == 'csv'):
+                return True
         return False
     else:
         if(kind.extension == form):
@@ -55,58 +58,51 @@ def CSVreader(file_str, params):
     data            = pd.read_csv(bin_fl_object, sep=',', encoding='latin1')
     report = {}
     if params['process'] == 'complete':
-        report['2dgraph'] = do2dGraph(data, params)
-        report['pca_report'] = PCAnalysis(data, params)
-        report['ica_report'] = ICAnalysis(data, params)
-        report['basics_report'] = Basics(data, params)
+        res, image = do2dGraph(data, params)
+        report['2dgraph'] = image
+        res, image = PCAnalysis(data, params)
+        report['pca_report'] = image
+        res, image = ICAnalysis(data, params)
+        report['ica_report'] = image
+        res, image = Basics(data, params)
+        report['basics_report'] = image
         return True, report
     elif params['process'] == 'nothing':
-        report['2dgraph'] = do2dGraph(data, params)
+        res, cnt = do2dGraph(data, params)
+        report['2dgraph'] = cnt
         return True, report
     elif params['process'] == 'basics':
-        report['basics_report'] = Basics(data, params)
-        report['2dgraph'] = do2dGraph(data, params)
-        #define target
+        res, basics_report = Basics(data, params)
+        report['basics_report'] = basics_report
+        res, image = do2dGraph(data, params)
+        report['2dgraph'] = image
         return True, report
     elif params['process'] == 'pca':
-        report['2dgraph'] = do2dGraph(data, params)
-        report['pca_report'] = PCAnalysis(data, params)
+        res, cnt = do2dGraph(data, params)
+        report['2dgraph'] = cnt
+        res, cnt = PCAnalysis(data, params)
+        report['pca_report'] = cnt
+        return True, report
+    elif params['process'] == 'ica':
+        res, cnt = do2dGraph(data, params)
+        report['2dgraph'] = cnt
+        res, cnt = ICAnalysis(data, params)
+        report['ica_report'] = cnt
         return True, report
     else:
         return False, None
 
-def SEGYreader(file_str, demand):
-    from segysak.segy import segy_header_scan
-    from segysak.segy import segy_loader
-
-    bytes_file = base64.b64encode(file_str)
-    bin_fl_object = BytesIO(bytes_file) #binary file-like object
-    header = segy_header_scan(bin_fl_object)
-    dt = header.loc["TRACE_SAMPLE_EXAMPLE"]["mean"]
-    sr = 1000/dt
-    
-    V3D = xr.open_dataset(
-        bin_fl_object,
-        dim_byte_fields={"ILINE_3D":189, "CROSSLINE_3D":193, "ShotPoint":197 },
-        extra_byte_fields={"CDP_X":181, "CDP_Y":185 },
-    )
-    #convolve_traces(V3D)
-    #graph_traces(V3D)
-    
-    if demand == 'raw':
-        #image = graph_image(V3D)
-        #return image
-        pass
-    elif demand == 'freqfilter':
-        #image = FreqFilter(V3D, sr)
-        #return image
-        pass
-    elif demand == 'nmofilter':
-        #image = NMOFilter(V3D, sr)
-        #return image
-        pass
-    else:
-        print('nothing to process')
+def SEGYreader(file_str, params):
+    if params['process']:
+        if params['process'] == 'nmo':
+            res, image = NMOfilter(filter_str, params)
+            return res, image
+        elif params['process'] == 'ffilter':
+            res, image = FFilter(file_str, params)
+            return res, image
+        else:
+            print('nothing to process')
+            return False, None
 
 def DATreader(file_str):
     pass
@@ -144,22 +140,27 @@ def ValidateFile(file_str):
 
 
 def FileReader(file_str, params):
+    print("HELLO")
     res, msg = ValidateFile(file_str) #is or not a file
     if res == False:
         return False, msg
 
     if FileType(file_str, 'csv'):
-        res, report = CSVreader(file_str, params), True
-        return True, report
+        print('is a csv')
+        res, report = CSVreader(file_str, params)
+        if res:
+            return True, report
+        else:
+            return False, None
     elif FileType(file_str, 'dat'):
         res, report = DATreader(file_str, params), True
         return True, report
     elif FileType(file_str, 'segy'):
-        res, report = SEGYreader(file_str, params)
+        res, image = SEGYreader(file_str, params)
         if res:
-            return True, report
+            return True, image
         else:
-            return False, 'no possible'
+            return False, None 
     elif FileType(file_str, 'zip'):
         res, report = ZIPread(file_str)
         return True, report

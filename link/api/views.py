@@ -19,37 +19,54 @@ class CreateDataSet(APIView):
         email       = data.get('email')
         filedata    = data.get('file')
         filekind    = data.get('filekind')
-        pca         = data.get('pca')
-        ica         = data.get('ica')
-        complete    = data.get('complete')
-        basics      = data.get('basics')
-        ydata       = data.get('ydata')
-        xdata       = data.get('xdata')
         process     = ''
         params      = {}
-        params['ydata'] = ydata
-        params['xdata'] = xdata
-        if(pca == 1):
-            process = 'pca'
-            params['target'] = data.get('target')
-            params['ncomps'] = data.get('ncomps')
-            params['process'] = 'pca'
-        elif (ica == 1):
-            process = 'ica'
-            params['target'] = data.get('target')
-            params['ncomps'] = data.get('ncomps')
-            params['process'] = 'ica'
-        elif (complete == 1):
-            process = 'complete'
-            params['target'] = data.get('target')
-            params['ncomps'] = data.get('ncomps')
-            params['process'] = 'complete'
-        elif (basics == 1):
-            process = 'basics'
-            params['target']    = data.get('target')
-            params['process']   = 'basics'
-        else:
-            process = ''
+        if (filekind == 'csv'):
+            pca         = data.get('pca')
+            ica         = data.get('ica')
+            complete    = data.get('complete')
+            basics      = data.get('basics')
+            ydata       = data.get('ydata')
+            xdata       = data.get('xdata')
+            params['ydata'] = ydata
+            params['xdata'] = xdata
+            if(pca == 1):
+                process = 'pca'
+                params['target'] = data.get('target')
+                params['ncomps'] = data.get('ncomps')
+                params['process'] = 'pca'
+            elif (ica == 1):
+                process = 'ica'
+                params['target'] = data.get('target')
+                params['ncomps'] = data.get('ncomps')
+                params['process'] = 'ica'
+            elif (complete == 1):
+                process = 'complete'
+                params['target'] = data.get('target')
+                params['ncomps'] = data.get('ncomps')
+                params['process'] = 'complete'
+            elif (basics == 1):
+                process = 'basics'
+                params['target']    = data.get('target')
+                params['process']   = 'basics'
+            else:
+                process = ''
+        elif (filekind == 'segy'):
+            nmo = data.get('nmo')
+            ffilter = data.get('ffilter')
+            convolv = data.get('convolve')
+            if(nmo == 1):
+                process = 'nmo'
+            elif (ffilter == 1):
+                process = 'ffilter'
+                params['cut_freq'] = data.get('cut_freq')
+                params['filtertype'] = data.get('filtertype')
+                params['filter_name'] = data.get('filter_name')
+            elif (convolv == 1):
+                process = 'convolve'
+            else:
+                process = None
+            params['process'] = process
 
         MSG = "hello " + username
         response = {
@@ -60,7 +77,6 @@ class CreateDataSet(APIView):
                 'filekind':filekind
         }
         worked, report = FileReader(filedata, params)
-        print("report:", report)
         if worked:
             response['report'] = report
         else:

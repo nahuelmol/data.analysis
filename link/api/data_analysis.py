@@ -23,7 +23,7 @@ def PCAnalysis(data, params):
     pcnames = []
     for i in range(ncomps):
         i += 1
-        pcnames.append(f"pc{i}")
+        pcnames.append(f"PC{i}")
 
     pca = PCA(n_components=ncomps)
     pca.fit(data)
@@ -39,10 +39,9 @@ def PCAnalysis(data, params):
         'file_str_pca_chart': ''
     }
     filepath = Plotter(complete, 'PCA - Principal Components Analysis')
-    #convert to str
-    file_str = imageConverter(filepath)
+    res, file_str = imageConverter(filepath)
     REPORT['file_str_pca_chart'] = file_str
-    return True, REPORT
+    return res, REPORT
 
 def ICAnalysis(data, params):
     #the same, select numerical columns (an what I aim to separate?)
@@ -63,6 +62,7 @@ def ICAnalysis(data, params):
     ICs     = pd.DataFrame(x_ica, columns=['IC1', 'IC2'])
     result  = pd.concat([target, ICs], axis=1)
     REPORT  = {}
+    res, file_str = imageConverter(filepath)
     REPORT['file_str_ica_chart'] = file_str
     return REPORT
 
