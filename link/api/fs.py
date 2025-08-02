@@ -93,11 +93,11 @@ def CSVreader(file_str, params):
 def SEGYreader(file_str, params):
     if params['process']:
         if params['process'] == 'nmo':
-            res, image = NMOfilter(filter_str, params)
-            return res, image
+            res, report = NMOfilter(filter_str, params)
+            return res, report
         elif params['process'] == 'ffilter':
-            res, image = FFilter(file_str, params)
-            return res, image
+            res, report = FFilter(file_str, params)
+            return res, report
         else:
             print('nothing to process')
             return False, None
@@ -151,9 +151,9 @@ def FileReader(file_str, params):
         res, report = DATreader(file_str, params), True
         return True, report
     elif FileType(file_str, 'segy'):
-        res, image = SEGYreader(file_str, params)
+        res, report = SEGYreader(file_str, params)
         if res:
-            return True, image
+            return True, report
         else:
             return False, None 
     elif FileType(file_str, 'zip'):

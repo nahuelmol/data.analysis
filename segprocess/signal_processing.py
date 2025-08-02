@@ -10,20 +10,9 @@ from segysak.segy import segy_loader
 
 from segprocess.Filter import Filter
 
-def applyFFilter(data, params):
+def applyFFilter(data, params, new_dataset):
     nyquist_f = 0.5 * params['sr']
     frec_norm = params['cut_freq'] / nyquist_f
-    ntrace, nsamples = data.shape
-    trace_name, sample_name = ('trace', 'sample')
-    shape = (ntrace, nsamples)
-    coords = {
-        trace_name:np.arange(ntrace), 
-        sample_name:np.arange(nsamples),
-    }
-    new_dataset = xr.DataArray( np.zeros(shape, dtype=float),
-                                dims=[trace_name, sample_name],
-                                coords=coords,
-                                )
     FILTER = Filter(params['filter_name']) 
     btype = params['filtertype']
     desired = params['gain']
@@ -45,7 +34,7 @@ def applyFFilter(data, params):
         coeffs = firwin2(numtaps=numtaps, cutoff=cutoff, fs=fs, window=params['window'])
     elif (params['filter_name'] == 'remez'):
         coeffs = remez(numtaps=numtaps, bands=bands, ftype=btype, desired=desired, fs=fs)
-    elif (params['filter_name'] == 'firls'):
+    elif (params['filter_name'] == 'firls'): 
         coeffs = firls(numtaps=numtaps, bands=bands, desired=desired, fs=fs)
     else:
         print('unrecognized filter')
@@ -56,7 +45,19 @@ def applyFFilter(data, params):
         signal = data.isel(cdp=i)
         filtered = FILTER.apply(signal)
         new_dataset[dict(trace=i)] = filtered
-    return True, new_dataset
+
+    FILTER.plotFResponse()
+    FILTER.plotTDResponse()
+    FILTER.plotPoleZero()
+    fresponse_str = FILTER.exportGraph('Fresponse')
+    pole_zero_str = FILTER.exportGraph('poleZero')
+    tdresponse_str= FILTER.exportGraph('TDresponse')
+
+    REPORT = {
+        'freq_response': fresponse_str,
+        'image':new_dataset_str
+    }
+    return True, REPORT
 
 def TraceSelector(selected_trace, sr, V3D):
     selected_trace = 0 #forcing
@@ -86,18 +87,24 @@ def Details(signal):
     plt.ylabel("Amplitude")
 
 def segyProcess2d(data, params):
-    res, new_dataset = applyFFilter(data, params)
-    return res, new_dataset
+    print('data type: {}'.format(type(data)))
+    ntrace, nsamples = data.shape
+    trace_name, sample_name = ('trace', 'sample')
+    shape = (ntrace, nsamples)
+    coords = {
+        trace_name:np.arange(ntrace), 
+        sample_name:np.arange(nsamples),
+    }
+    new_dataset = xr.DataArray( np.zeros(shape, dtype=float),
+                                dims=[trace_name, sample_name],
+                                coords=coords,
+                                )
+    res, report = applyFFilter(data, params, new_dataset)
+    return res, report
 
 def segyProcess3d(data, params):
-    data = xr.open_dataset(
-        bin_fl_object,
-        dim_byte_fields={"ILINE_3D":189, "CROSSLINE_3D":193, "ShotPoint":197 },
-        extra_byte_fields={"CDP_X":181, "CDP_Y":185 },
-    )
-
-    res, new_dataset = applyFFilter(data, params)
-    return res, new_dataset
+    res, report = applyFFilter(data, params)
+    return res, report
 
 def FFilter(file_str, params):
     bytes_file  = base64.b64decode(file_str)
@@ -109,17 +116,14 @@ def FFilter(file_str, params):
         f.write(bytes_file)
     loader = segy_loader('temp_file.segy')
     if(len(loader.data.dims) == 2):
-        res, image = segyProcess2d(loader.data, params)
-        return res, image
+        res, report = segyProcess2d(loader.data, params)
+        return res, report
     elif (len(loader.data.dims) == 3):
-        res, image = segyProcess3d(loader.data, params)
-        return res, image
+        res, report = segyProcess3d(loader.data, params)
+        return res, report
     else:
         print('unrecognized dimension')
         return False, None
-    REPORT = {}
-    return False, REPORT
-
 
 def NMOFilter(file_str, params):
     pass

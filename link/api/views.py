@@ -84,7 +84,6 @@ class CreateDataSet(APIView):
         worked, report = FileReader(filedata, params)
         if worked:
             response['report'] = report
-            #in segy type, report is imgae, i must change it
         else:
             response['msg'] = f"File cannot be process"
         return Response(response)
