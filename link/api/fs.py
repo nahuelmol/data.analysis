@@ -18,6 +18,7 @@ def issegy(bin_data):
             return True
     except Exception as e:
         return False
+
 def iscsv(bin_data):
     text = bin_data.decode("utf-8", errors="ignore")
     lines = text.splitlines()
@@ -30,13 +31,10 @@ def iscsv(bin_data):
     return True
 
 def FileType(file_str, form):
-    #form is not being used
     bin_data = base64.b64decode(file_str)
     kind = filetype.guess(bin_data)
     myformat = ''
     if kind is None:
-        #not recognized type
-        #plain text for csv dat
         res_seg = issegy(bin_data)
         if res_seg:
             if (form == 'segy'):
@@ -104,15 +102,15 @@ def SEGYreader(file_str, params):
             print('nothing to process')
             return False, None
 
-def DATreader(file_str):
+def DATreader(file_str, params):
     pass
-def ZIPreader(file_str):
+def ZIPreader(file_str, params):
     unzip(file_str)
+    return True 
     
 def TARreader(fileobject):
     import tarfile
     with tarfile.open(fileobject, 'r:*') as tar_ref:
-        #'r:*' mode that detects the compression (gz, bz2, etc)
         tar_ref.extractall(extract_to)
 
 def isvalid_base64(s):
@@ -138,15 +136,12 @@ def ValidateFile(file_str):
     else:
         return False, 'something went wrong'
 
-
 def FileReader(file_str, params):
-    print("HELLO")
     res, msg = ValidateFile(file_str) #is or not a file
     if res == False:
         return False, msg
 
     if FileType(file_str, 'csv'):
-        print('is a csv')
         res, report = CSVreader(file_str, params)
         if res:
             return True, report

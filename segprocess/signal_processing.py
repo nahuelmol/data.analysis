@@ -1,23 +1,62 @@
 import scipy
 import base64
+import xarray as xr
+import numpy as np
 
 from io import BytesIO
-from scipy.signal import freqz, butter, lfilter, firwin
+from scipy.signal import freqz, butter, firwin, ellip
 from segysak.segy import segy_header_scan, segy_header_scrape, segy_bin_scrape
 from segysak.segy import segy_loader
 
-def TraceGrapher(signal, filtered):
-    plt.plot(t, air1[0])
-    plt.plot(t, filtered)
-    plt.show()
+from segprocess.Filter import Filter
 
-def SpecGrapher(signal, filtered):
-    plt.magnitude_spectrum(filtered, scale='dB', label="Señal con filtro pasa bajo Butterworth")
-    plt.magnitude_spectrum(signal, scale='dB', label="Señal sin filtro")
-    plt.xlabel('Normalized frequency')
-    plt.ylabel('Amplitude (dB)')
-    plt.legend()
-    plt.show();
+def applyFFilter(data, params):
+    nyquist_f = 0.5 * params['sr']
+    frec_norm = params['cut_freq'] / nyquist_f
+    ntrace, nsamples = data.shape
+    trace_name, sample_name = ('trace', 'sample')
+    shape = (ntrace, nsamples)
+    coords = {
+        trace_name:np.arange(ntrace), 
+        sample_name:np.arange(nsamples),
+    }
+    new_dataset = xr.DataArray( np.zeros(shape, dtype=float),
+                                dims=[trace_name, sample_name],
+                                coords=coords,
+                                )
+    FILTER = Filter(params['filter_name']) 
+    btype = params['filtertype']
+    desired = params['gain']
+    fs = params['fs']
+    numtaps = params['numtaps']
+    if(params['filter_name'] == 'butterworth'):
+        coeffs = butter(params['order'], Wn=frec_norm, btype=btype, analog=False)
+    elif (params['filter_name'] == 'cheby1'):
+        coeffs = cheby1(params['order'], rs=40, Wn=frec_norm, btype=btype)
+    elif (params['filter_name'] == 'cheby2'):
+        coeffs = cheby2(params['order'], rs=40, Wn=frec_norm, btype=btype)
+    elif (params['filter_name'] == 'elliptic'):
+        coeffs = ellip(params['order'], rp=1, rs=40, Wn=frec_norm, btype=btype)
+    elif (params['filter_name'] == 'bessel'):
+        coeffs = bessel(params['order'], frec_norm, btype=btype, analog=False, nrom='phase')
+    elif (params['filter_name'] == 'firwin'):
+        coeffs = firwin(numtaps=numtaps, cutoff=cutoff, fs=fs, window=params['window'])
+    elif (params['filter_name'] == 'firwin2'):
+        coeffs = firwin2(numtaps=numtaps, cutoff=cutoff, fs=fs, window=params['window'])
+    elif (params['filter_name'] == 'remez'):
+        coeffs = remez(numtaps=numtaps, bands=bands, ftype=btype, desired=desired, fs=fs)
+    elif (params['filter_name'] == 'firls'):
+        coeffs = firls(numtaps=numtaps, bands=bands, desired=desired, fs=fs)
+    else:
+        print('unrecognized filter')
+        return False, None
+
+    FILTER.setCoeff(coeffs)
+    for i in range(ntrace):
+        signal = data.isel(cdp=i)
+        filtered = FILTER.apply(signal)
+        new_dataset[dict(trace=i)] = filtered
+    return True, new_dataset
 
 def TraceSelector(selected_trace, sr, V3D):
     selected_trace = 0 #forcing
@@ -27,7 +66,6 @@ def TraceSelector(selected_trace, sr, V3D):
     plt.figure(figsize=(15, 8))
     nsamples = signal.size
     t_total = nsamples / sr #duracion de 3.004 segundos
-    print("duration -> ", t_total)
     t = np.linspace(0, t_total, nsamples) #eje de tiempo
     plt.subplot(4, 1, 1)
     plt.plot(t, signal)
@@ -46,55 +84,26 @@ def Details(signal):
     plt.title("Signal -> Fourier Transform")
     plt.xlabel("Frequency")
     plt.ylabel("Amplitude")
-    plt.show()
 
 def segyProcess2d(data, params):
-    filterType  = params['filtertype']
-    filtername  = params['filter_name']
-    cut_freq    = params['cut_freq']
-    print(type(data))
+    res, new_dataset = applyFFilter(data, params)
+    return res, new_dataset
 
 def segyProcess3d(data, params):
-    filterType  = params['filtertype']
-    filtername  = params['filter_name']
-    cut_freq    = params['cut_freq']
-    order       = ''
-    print(type(data))
-
     data = xr.open_dataset(
         bin_fl_object,
         dim_byte_fields={"ILINE_3D":189, "CROSSLINE_3D":193, "ShotPoint":197 },
         extra_byte_fields={"CDP_X":181, "CDP_Y":185 },
     )
-    ntrace, nsamples = data.shape
-    trace_name, sample_name = data.dims #hipotetic names
-    new_dataset = xr.DataArray( np.zeros((n,m)),
-                                dims=['trace', 'time'],
-                                coords={'trace':np.arange(n),
-                                   'time':np.arange(m)}
-                                )
 
-    nyquist_freq = 0.5 * params['sr']
-    frec_norm = params['cut_freq'] / nyquist_freq
-    if(filtertype == 'butterworth'):
-        b, a = butter(params['butt_order'], frec_norm, btype='low', analog=False)
-    else:
-        print('unrecognized filter')
-        return False, None
-
-    for i in range(ntrace):
-        signal = data.isel(trace_name=i)
-        filtered = lfilter(b,a, signal)
-        new_dataset.isel(trace=filtered)
-    return True, new_dataset
+    res, new_dataset = applyFFilter(data, params)
+    return res, new_dataset
 
 def FFilter(file_str, params):
     bytes_file  = base64.b64decode(file_str)
     headers  = segy_header_scrape('temp_file.segy')
-    for col in headers.columns:
-        print("col: ", col)
-    dt = headers['TRACE_SAMPLE_INTERVAL'].mean()
-    sr = 1000/dt
+    dt = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
+    sr = 1/dt
     params['sr'] = sr
     with open('temp_file.segy', 'wb') as f:
         f.write(bytes_file)
@@ -112,5 +121,5 @@ def FFilter(file_str, params):
     return False, REPORT
 
 
-def NMOFilter(V3D):
+def NMOFilter(file_str, params):
     pass

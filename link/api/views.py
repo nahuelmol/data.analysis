@@ -59,9 +59,14 @@ class CreateDataSet(APIView):
                 process = 'nmo'
             elif (ffilter == 1):
                 process = 'ffilter'
-                params['cut_freq'] = data.get('cut_freq')
+                params['gain']      = data.get('gain')
+                params['fs']        = data.get('fs')
+                params['cut_freq']  = data.get('cut_freq')
                 params['filtertype'] = data.get('filtertype')
                 params['filter_name'] = data.get('filter_name')
+                params['window']    = data.get('window')
+                params['numtaps']   = data.get('numtaps')
+                params['order']     = data.get('order')
             elif (convolv == 1):
                 process = 'convolve'
             else:
@@ -79,6 +84,7 @@ class CreateDataSet(APIView):
         worked, report = FileReader(filedata, params)
         if worked:
             response['report'] = report
+            #in segy type, report is imgae, i must change it
         else:
             response['msg'] = f"File cannot be process"
         return Response(response)
