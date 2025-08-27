@@ -12,9 +12,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 
 import datetime
-import ast
 import json
-from link.api.fs import FileReader, File
+from link.api.fs import File
 
 class CreateDataSet(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -27,23 +26,21 @@ class CreateDataSet(APIView):
             return Response(response)
         meta = request.data.get('metadata')
         data = json.loads(meta)
-        file = request.FILES.get('file')
+        file = request.FILES.get('file').read()
 
-        MSG = "hello " + username
         response = {
-                'msg':MSG,
                 'data':None,
-                'status':status.HTTP_200_OK,
-                'filekind':filekind
+                'status':None,
         }
         FILE = File(file, data)
         FILE.read_file()
         if FILE.report != {}:
             response['report'] = FILE.report
             response['msg'] = f"File processed"
+            response['status'] = status.HTTP_200_OK
         else:
             response['msg'] = f"File cannot be process"
-            response['status'] = status.HTTPS_500_INTERNAL_SERVER_ERROR
+            response['status'] = status.HTTP_500_INTERNAL_SERVER_ERROR
         return Response(response)
 
     def get(self, request):

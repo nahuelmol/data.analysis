@@ -22,14 +22,13 @@ class File:
         self.name   = None
         self.sep    = None
 
-        self.segy_params = ['nmo', 'gain', 'fs', 'fc', 'filtype', 'filtname', 
+        self.segy_params = ['nmo', 'gain', 'fs', 'fc', 'filtertype', 'filtername', 
                             'window', 'numtaps', 'order', 'convolve']
         self.stat_params = ['pca', 'ica', 'complete', 'basics', 'target', 'ncomps']
 
         self.params = {}
         self.report = {}
         
-        self.file_format = data.get()
         self.basics = data.get('basics')
         self.complete = data.get('complete')
         self.pca = data.get('pca')
@@ -43,8 +42,8 @@ class File:
         self.gain       = data.get('gain')
         self.fs         = data.get('fs')
         self.cut_freq   = data.get('fc')
-        self.filtertype = data.get('filtype')
-        self.filtername = data.get('filtname')
+        self.filtertype = data.get('filtertype')
+        self.filtername = data.get('filtername')
         self.window     = data.get('window')
         self.numtaps    = data.get('numtaps')
         self.order      = data.get('order')
@@ -91,9 +90,8 @@ class File:
             print('not separator')
 
 
-    def file_type(self, form):
+    def file_type(self):
         kind = filetype.guess(self.file)
-        myformat = ''
         if kind is None:
             self.segy   = issegy(self.file)
             self.csv    = is_sv(self.file, ',')
@@ -108,15 +106,13 @@ class File:
     def read_file(self):
         #take_extension()
         self.file_type()
-        self.set_sep()
         if (self.csv == True or self.tsv == True or self.ssv == True):
+            self.set_sep()
             self.set_params('stat')
-            res, report = self.stat_reader()
-            self.report = report
+            self.stat_reader()
         elif (self.segy == True):
             self.set_params('segy')
-            res, report = self.segy_reader()
-            self.report = report
+            self.segy_reader()
         else:
             self.params = {}
             self.report = {}
@@ -160,17 +156,16 @@ class File:
         else:
             self.report = {}
 
-    def segy_reader(self.file):
-        if params['process']:
-            if self.nmo == True:
-                res, report = NMOfilter(self.file, self.params)
-                self.report = report
-            elif self.ffilter == True:
-                res, report = FFilter(self.file, self.params)
-                self.report = report
-            else:
-                print('nothing to process')
-                self.report = report
+    def segy_reader(self):
+        if self.params['nmo'] == True:
+            res, report = NMOfilter(self.file, self.params)
+            self.report = report
+        elif self.params['ffilter'] == True:
+            res, report = FFilter(self.file, self.params)
+            self.report = report
+        else:
+            print('nothing to process')
+            self.report = {}
 
     def dat_reader(self):
         pass

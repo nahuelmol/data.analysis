@@ -1,9 +1,14 @@
 
 from scipy.signal import freqz, butter, lfilter, firwin, ellip
+import matplotlib.pyplot as plt
+import numpy as np
+import base64
 
 class Filter:
     def __init__(self, filtername):
         self.start = False
+        self.ntraces = None 
+        self.nsamples= None
         self.type = filtername
         self.pathFResponse  = 'temp/{}_FResponse.png'.format(filtername)
         self.pathTDResponse = 'temp/{}_TDResponse.png'.format(filtername)
@@ -18,6 +23,10 @@ class Filter:
             self.b = 0.0
         else:
             print('handle this')
+
+    def setTargetDims(self, data):
+        self.ntraces, self.nsamples = data.shape
+        print('ntraces: {} - nsamples: {}'.format(self.ntraces, self.nsamples))
 
     def setCoeff(self, coeffs):
         if (type(coeffs) == tuple):
@@ -42,7 +51,7 @@ class Filter:
             return None
 
     def apply(self, signal):
-        if(self.start = False):
+        if(self.start == False):
             print('unique')
             self.nsamples = len(signal)
             self.start = True
@@ -64,7 +73,7 @@ class Filter:
         else:
             print('not recognized target')
             return False, None
-        with open(filepath, 'r') as f:
+        with open(filepath, 'rb') as f:
             data = f.read()
             data_str = base64.b64encode(data).decode('utf-8')
         return True, data_str
@@ -117,7 +126,7 @@ class Filter:
             return
 
         plt.figure(figsize=(6,6))
-        plt.scatter(np.real(zeros), np.ima(zeros), marker='o', 
+        plt.scatter(np.real(zeros), np.imag(zeros), marker='o', 
                     facecolors='none', edgecolors='blue', label='Poles')
         unit_circle = plt.Circle((0,0), 1, color='black', fill=False, linestyle='dashed')
         plt.gca().add_artist(unit_circle)
