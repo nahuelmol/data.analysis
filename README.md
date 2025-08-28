@@ -20,7 +20,7 @@ In addition to Python's data analysis tools, specialized libraries are used to h
 
 *segyio
 
-Once a SEGY file arrives to the server, varied chart image are generated in .png format. Being as, the type of processing can be selected, the number of those images vary. 
+Once a SEGY file arrives to the server, varied chart image are generated in .png format. The type of processing can be selected, then the number of those images vary. 
 
 Being a APIrest based on json, png files must be converted to string files and finally be injected to the response json.
 
@@ -41,6 +41,16 @@ In this case waitress is used. It is a python pure server, ideal for web applica
 
 ```
 waitress-serve --port=8000 mybackend.wsgi:application
+```
+
+The development server is built for debugging and fast tests, not for production and supported on Windows buffers. However, when large files are uploaded, Django's server is unable to handle them properly because mentioned buffers get fill.
+
+That's why waitress is used. This wsgi server is robust and estable for handling heavy files uploading, being able to process chunks more efficiently, avoiding the overuse of Windows buffers and preventing related issues.
+
+As alternative to the above commad, a sever.py file can be used.
+
+```
+python serve.py
 ```
 
 ### Remote setting
@@ -74,3 +84,4 @@ which are in
 * https://pypi.org/project/pandas/1.3.4/#files
 * https://pypi.org/project/numpy/1.21.4/#files
 * https://pypi.org/project/scipy/1.5.4/#files
+
