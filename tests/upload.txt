@@ -1,0 +1,10 @@
+url = "http://127.0.0.1:8000/api/create-data-set"
+request = POST
+--form "metadata={\"username\":\"nahuel\",\"action\":\"upload\",\"ffilter\":true,\"fc\":25,\"order\":2,\"filtertype\":\"low\",\"filtername\":\"butterworth\",\"filterkind\":\"segy\",\"fs\":1000,\"gain\":[1,0],\"window\":\"hamming\",\"numtaps\":101};type=application/json"
+
+--form "file=@Line_301_PSTM_Stack_Enh.segy"
+
+--header "Content-Type:multipart/form-data"
+
+--dump-header "headers.txt"
+--output "body.json"

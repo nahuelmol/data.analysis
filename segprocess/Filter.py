@@ -1,8 +1,11 @@
 
-from scipy.signal import freqz, butter, lfilter, firwin, ellip
 import matplotlib.pyplot as plt
 import numpy as np
 import base64
+import segyio
+
+from scipy.signal import freqz, butter, lfilter, firwin, ellip
+from segysak.segy import segy_writer
 
 class Filter:
     def __init__(self, filtername):
@@ -13,6 +16,8 @@ class Filter:
         self.pathFResponse  = 'temp/{}_FResponse.png'.format(filtername)
         self.pathTDResponse = 'temp/{}_TDResponse.png'.format(filtername)
         self.pathPoleZero   = 'temp/{}_PoleZero.png'.format(filtername)
+        self.pathSegyFile   = 'temp/{}_output_segy.segy'.format(filtername)
+        self.pathSeismicImage = 'temp/{}_seismic_image.png'.format(filtername)
         self.responseType   = None
         self.setResponse()
         self.worN           = None
@@ -93,6 +98,7 @@ class Filter:
         plt.ylabel('Amplitude')
         plt.grid()
         plt.savefig(self.pathTDResponse)
+
     def plotFResponse(self):
         w = None
         h = None
@@ -137,10 +143,34 @@ class Filter:
         plt.title('Pole-Zero Plot')
         plt.savefig(self.pathPoleZero)
 
+    def plotSegy(self, data):
+        n_traces, n_samples = data.shape
+        dt = data.attrs.get("dt", 4000)
 
+        spec = segyio.spec()
+        spec.sorting = 2
+        spec.format = 5
+        spec.samples = range(n_samples)
+        spec.ilines = range(n_traces)
+        spec.xlines = [1]
 
+        with segyio.create(self.pathSegyFile, spec) as f:
+            f.bin[segyio.BinField.Interval] = dt
+            for i in range(n_traces):
+                f.trace[i] = data[i,:].values.astype("float32")
 
-
-
-
+        arr = data.values
+        t = np.arange(n_samples) * dt * 1e-6
+        plt.figure(figsize=(12,6))
+        plt.imshow(
+                arr.T,
+                aspect='auto',
+                cmap='seismic',
+                extent=[0, n_traces, t[-1], t[0]]
+        )
+        plt.xlabel("Trace")
+        plt.ylabel("Time [s]")
+        plt.title("Seismic Image")
+        plt.colorbar(label="Amplitude")
+        plt.savefig(self.pathSeismicImage, dpi=300)
 

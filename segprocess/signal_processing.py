@@ -55,12 +55,12 @@ def applyFFilter(data, params, new_dataset):
     FILTER.plotFResponse()
     FILTER.plotTDResponse()
     FILTER.plotPoleZero()
+    FILTER.plotSegy(new_dataset)
     fresponse_str = FILTER.exportGraph('Fresponse')
     pole_zero_str = FILTER.exportGraph('poleZero')
     tdresponse_str= FILTER.exportGraph('TDresponse')
 
     new_dataset_str = convert_ascci(new_dataset)
-
     REPORT = {
         'freq_response': fresponse_str,
         'tdresponse':tdresponse_str,
