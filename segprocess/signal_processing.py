@@ -16,49 +16,27 @@ def convert_ascci(data):
     return str(data)
     
 def applyFFilter(data, params, new_dataset):
-    nyquist_f = 0.5 * params['sr']
-    frec_norm = params['cut_freq'] / nyquist_f
-    FILTER  = Filter(params['filtername']) 
-    btype   = params['filtertype']
-    desired = params['gain']
-    fs = params['fs']
-    numtaps = params['numtaps']
-    if(params['filtername'] == 'butterworth'):
-        coeffs = butter(params['order'], Wn=frec_norm, btype=btype, analog=False)
-    elif (params['filtername'] == 'cheby1'):
-        coeffs = cheby1(params['order'], rs=40, Wn=frec_norm, btype=btype)
-    elif (params['filtername'] == 'cheby2'):
-        coeffs = cheby2(params['order'], rs=40, Wn=frec_norm, btype=btype)
-    elif (params['filtername'] == 'elliptic'):
-        coeffs = ellip(params['order'], rp=1, rs=40, Wn=frec_norm, btype=btype)
-    elif (params['filtername'] == 'bessel'):
-        coeffs = bessel(params['order'], frec_norm, btype=btype, analog=False, nrom='phase')
-    elif (params['filtername'] == 'firwin'):
-        coeffs = firwin(numtaps=numtaps, cutoff=cutoff, fs=fs, window=params['window'])
-    elif (params['filtername'] == 'firwin2'):
-        coeffs = firwin2(numtaps=numtaps, cutoff=cutoff, fs=fs, window=params['window'])
-    elif (params['filtername'] == 'remez'):
-        coeffs = remez(numtaps=numtaps, bands=bands, ftype=btype, desired=desired, fs=fs)
-    elif (params['filtername'] == 'firls'): 
-        coeffs = firls(numtaps=numtaps, bands=bands, desired=desired, fs=fs)
-    else:
-        print('unrecognized filter')
-        return False, None
-
-    FILTER.setCoeff(coeffs)
-    FILTER.setTargetDims(data)
+    FILTER  = Filter(params) 
+    FILTER.set_filter()
+    FILTER.set_coeffs()
+    FILTER.set_target_dims(data)
     for i in range(FILTER.ntraces):
         signal = data.isel(cdp=i)
         filtered = FILTER.apply(signal)
         new_dataset[dict(trace=i)] = filtered
 
+    FILTER.plot_filter_alone()
     FILTER.plotFResponse()
     FILTER.plotTDResponse()
     FILTER.plotPoleZero()
-    FILTER.plotSegy(new_dataset)
+
+    FILTER.plotSegy(data, 'original')
+    FILTER.write_segy(new_dataset)
+    FILTER.plotSegy(new_dataset, 'processed')
     fresponse_str = FILTER.exportGraph('Fresponse')
     pole_zero_str = FILTER.exportGraph('poleZero')
     tdresponse_str= FILTER.exportGraph('TDresponse')
+    #FILTER.exportGraph('seismic_image')
 
     new_dataset_str = convert_ascci(new_dataset)
     REPORT = {
@@ -87,26 +65,35 @@ def segyProcess2d(data, params):
 def segyProcess3d(data, params):
     info = data.shape
     print(info)
-    #res, report = applyFFilter(data, params)
-    #return res, report
-    return False, None
+    #res, report = applyFFilter(data, params) #return res, report return False, None
 
-def FFilter(file, params):
-    with open('temp_file.segy', 'wb') as f:
+def FFilter(file, params, extension):
+    print('\n{}\n'.format(extension))
+    temp_file = 'temp_file.{}'.format(extension)
+    with open(temp_file, 'wb') as f:
         f.write(file)
-    loader  = segy_loader('temp_file.segy')
-    header  = segy_header_scrape('temp_file.segy')
-    dt = (header['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
+    headers  = segy_header_scrape(temp_file, silent=True)
+    dt = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
     params['sr'] = 1/dt
-    if(len(loader.data.dims) == 2):
+    n_inlines   = headers["INLINE_3D"].nunique() 
+    n_xlines = headers["CROSSLINE_3D"].nunique() 
+    if n_inlines == 1 and n_xlines == 1:
+        loader  = segy_loader(temp_file)
         res, report = segyProcess2d(loader.data, params)
         return res, report
+    else:
+        print("thinkin on 3d")
+        #res, report = segyProcess3d(data, params)
+    return False, {}
+    """
+    if(len(loader.data.dims) == 2):
     elif(len(loader.data.dims) == 3):
         res, report = segyProcess3d(loader.data, params)
         return res, report
     else:
         print('unrecognized dimension')
         return False, None
+    """
 
 def NMOFilter(file, params):
     pass

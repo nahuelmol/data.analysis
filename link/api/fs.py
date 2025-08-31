@@ -15,11 +15,14 @@ from segprocess.signal_processing import FFilter
 
 class File:
     def __init__(self, file, data):
-        self.file   = file
+        self.name   = file.name
+        self.size   = file.size
+        self.file   = file.read()
+        self.extension = file.name.split(".")[-1]
+
         self.segy   = False
         self.csv    = False
         self.tsv    = False
-        self.name   = None
         self.sep    = None
 
         self.segy_params = ['nmo', 'gain', 'fs', 'fc', 'filtertype', 'filtername', 
@@ -74,6 +77,7 @@ class File:
             self.params['gain'] = self.gain
             self.params['filtertype']   = self.filtertype
             self.params['filtername']   = self.filtername
+            self.params['segy_type']    = self.extension
         elif which == 'zip':
             print('idk')
         else:
@@ -104,7 +108,6 @@ class File:
             self.ssv = False
 
     def read_file(self):
-        #take_extension()
         self.file_type()
         if (self.csv == True or self.tsv == True or self.ssv == True):
             self.set_sep()
@@ -161,7 +164,7 @@ class File:
             res, report = NMOfilter(self.file, self.params)
             self.report = report
         elif self.params['ffilter'] == True:
-            res, report = FFilter(self.file, self.params)
+            res, report = FFilter(self.file, self.params, self.extension)
             self.report = report
         else:
             print('nothing to process')

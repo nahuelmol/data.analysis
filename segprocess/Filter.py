@@ -8,16 +8,33 @@ from scipy.signal import freqz, butter, lfilter, firwin, ellip
 from segysak.segy import segy_writer
 
 class Filter:
-    def __init__(self, filtername):
+    def __init__(self, params):
         self.start = False
         self.ntraces = None 
         self.nsamples= None
-        self.type = filtername
-        self.pathFResponse  = 'temp/{}_FResponse.png'.format(filtername)
-        self.pathTDResponse = 'temp/{}_TDResponse.png'.format(filtername)
-        self.pathPoleZero   = 'temp/{}_PoleZero.png'.format(filtername)
-        self.pathSegyFile   = 'temp/{}_output_segy.segy'.format(filtername)
-        self.pathSeismicImage = 'temp/{}_seismic_image.png'.format(filtername)
+
+        self.order  = params['order']
+        self.type   = params['filtername']
+        self.sr     = params['sr']
+        self.nyq_f       = 0.5 * params['sr']
+        self.cutoff      = params['cut_freq']
+        self.Wn          = params['cut_freq'] / self.nyq_f
+        self.btype       = params['filtertype']
+        self.desired     = params['gain']
+        self.fs          = params['fs']
+        self.numtaps     = params['numtaps']
+
+        self.IIRfilters = ['butterworth', 'cheby1', 'cheby2', 'elliptic', 'bessel']
+        self.FIRfilters = ['firwin', 'firwin2', 'remez', 'firls']
+
+        self.pathFResponse  = 'temp/{}_FResponse.png'.format(self.type)
+        self.pathTDResponse = 'temp/{}_TDResponse.png'.format(self.type)
+        self.pathPoleZero   = 'temp/{}_PoleZero.png'.format(self.type)
+
+        self.pathSegyFile   = 'temp/{}_output_segy.segy'.format(self.type)
+        self.pathSeismicImage = 'temp/{}_seismic_image.png'.format(self.type)
+        self.pathOriginalImage = 'temp/original_seismic_image.png'
+
         self.responseType   = None
         self.setResponse()
         self.worN           = None
@@ -29,26 +46,51 @@ class Filter:
         else:
             print('handle this')
 
-    def setTargetDims(self, data):
+    def set_filter(self):
+        if not(self.type in self.IIRfilters or self.type in self.FIRfilters):
+            print('unrecognized filter')
+            return False, None
+        if(self.type == 'butterworth'):
+            self.coeffs = butter(self.order, Wn=self.Wn, btype=self.btype, analog=False)
+        elif (self.type == 'cheby1'):
+            self.coeffs = cheby1(self.order, rs=40, Wn=self.Wn, btype=self.btype)
+        elif (self.type == 'cheby2'):
+            self.coeffs = cheby2(self.order, rs=40, Wn=self.Wn, btype=self.btype)
+        elif (self.type == 'elliptic'):
+            self.coeffs = ellip(self.order, rp=1, rs=40, Wn=self.Wn, btype=self.btype)
+        elif (self.type == 'bessel'):
+            self.coeffs = bessel(self.order, frec_norm, btype=self.btype, analog=False, nrom='phase')
+        elif (self.type == 'firwin'):
+            self.coeffs = firwin(numtaps=self.numtaps, cutoff=self.cutoff, fs=self.fs, window=self.window)
+        elif (self.type == 'firwin2'):
+            self.coeffs = firwin2(numtaps=self.numtaps, cutoff=self.cutoff, fs=fs, window=self.window)
+        elif (self.type == 'remez'):
+            self.coeffs = remez(numtaps=self.numtaps, bands=self.bands, btype=self.btype, desired=self.desired, fs=self.fs)
+        elif (self.type == 'firls'): 
+            self.coeffs = firls(numtaps=self.numtaps, bands=self.bands, desired=self.desired, fs=self.fs)
+        else:
+            print('GOING OUT')
+            return False, None
+
+
+    def set_target_dims(self, data):
         self.ntraces, self.nsamples = data.shape
         print('ntraces: {} - nsamples: {}'.format(self.ntraces, self.nsamples))
 
-    def setCoeff(self, coeffs):
-        if (type(coeffs) == tuple):
-            self.a = coeffs[0]
-            self.b = coeffs[1]
-        elif (type(coeffs) == list):
-            self.coeffs = coeffs
+    def set_coeffs(self):
+        if (isinstance(self.coeffs, tuple)):
+            self.a = self.coeffs[0]
+            self.b = self.coeffs[1]
+        elif(isinstance(self.coeffs, list)):
+            self.coeffs = self.coeffs
         else:
             print('not coefficients')
 
     def setResponse(self):
-        IIRfilters = ['butterworth', 'cheby1', 'cheby2', 'elliptic', 'bessel']
-        FIRfilters = ['firwin', 'firwin2', 'remez', 'firls']
-        if self.type in IIRfilters:
+        if self.type in self.IIRfilters:
             self.responseType = 'IIR'
             self.worN = 8000
-        elif self.type in FIRfiters:
+        elif self.type in self.FIRfiters:
             self.responseType = 'FIR'
             self.worN = 8000
         else:
@@ -143,7 +185,7 @@ class Filter:
         plt.title('Pole-Zero Plot')
         plt.savefig(self.pathPoleZero)
 
-    def plotSegy(self, data):
+    def write_segy(self, data):
         n_traces, n_samples = data.shape
         dt = data.attrs.get("dt", 4000)
 
@@ -159,6 +201,26 @@ class Filter:
             for i in range(n_traces):
                 f.trace[i] = data[i,:].values.astype("float32")
 
+    def plotSegy(self, data, which):
+        n_traces, n_samples = data.shape
+        dt = data.attrs.get("dt", 4000)
+        title  = ''
+        filename = ''
+        if (which == 'original'):
+            filename = self.pathOriginalImage
+            title = 'Original Seismic Image'
+        elif (which == 'processed'):
+            filename = self.pathSeismicImage
+            title = 'Processed Seismic Image'
+        else:
+            opc = input('not recognized which image; original(1) or processed(2)')
+            if opc == 1:
+                filename = 'original'
+            elif opc == 2:
+                filaname = 'processed'
+            else: 
+                return False, 'invalid option'
+
         arr = data.values
         t = np.arange(n_samples) * dt * 1e-6
         plt.figure(figsize=(12,6))
@@ -170,7 +232,16 @@ class Filter:
         )
         plt.xlabel("Trace")
         plt.ylabel("Time [s]")
-        plt.title("Seismic Image")
+        plt.title(title)
         plt.colorbar(label="Amplitude")
-        plt.savefig(self.pathSeismicImage, dpi=300)
+        plt.savefig(filename, dpi=300)
+        return True, 'plot done!'
+
+    def plot_filter_alone(self):
+        if self.responseType == 'IIR':
+            freq, resp = freqz(self.a, self.b)
+            plt.plot(freq * self.sr /(2 * np.pi), 20 * np.log10(np.abs(resp)))
+            plt.xlabel("Frequency")
+            plt.ylabel("Amplitude")
+            plt.savefig("here.png", dpi=300)
 

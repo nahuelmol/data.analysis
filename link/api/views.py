@@ -26,7 +26,7 @@ class CreateDataSet(APIView):
             return Response(response)
         meta = request.data.get('metadata')
         data = json.loads(meta)
-        file = request.FILES.get('file').read()
+        file = request.FILES.get('file')
 
         response = {
                 'data':None,
