@@ -16,12 +16,11 @@ class Filter:
         self.order  = params['order']
         self.type   = params['filtername']
         self.sr     = params['sr']
-        self.nyq_f       = 0.5 * params['sr']
+        self.nyq_f       = params['ny']
         self.cutoff      = params['cut_freq']
         self.Wn          = params['cut_freq'] / self.nyq_f
         self.btype       = params['filtertype']
         self.desired     = params['gain']
-        self.fs          = params['fs']
         self.numtaps     = params['numtaps']
 
         self.IIRfilters = ['butterworth', 'cheby1', 'cheby2', 'elliptic', 'bessel']
@@ -31,9 +30,11 @@ class Filter:
         self.pathTDResponse = 'temp/{}_TDResponse.png'.format(self.type)
         self.pathPoleZero   = 'temp/{}_PoleZero.png'.format(self.type)
 
-        self.pathSegyFile   = 'temp/{}_output_segy.segy'.format(self.type)
-        self.pathSeismicImage = 'temp/{}_seismic_image.png'.format(self.type)
-        self.pathOriginalImage = 'temp/original_seismic_image.png'
+        self.pathSegyFile       = 'temp/{}_output_segy.segy'.format(self.type)
+        self.pathSeismicImage   = 'temp/{}_seismic_image.png'.format(self.type)
+        self.pathOriginalImage  = 'temp/original_seismic_image.png'
+
+        self.path_filter_alone = 'temp/{}_alone'.format(self.type)
 
         self.responseType   = None
         self.setResponse()
@@ -117,13 +118,19 @@ class Filter:
             filepath = self.pathTDResponse
         elif(which == 'poleZero'):
             filepath = self.pathPoleZero
+        elif(which == 'alone'):
+            filepath = self.path_filter_alone
+        elif(which == 'processed'):
+            filepath = self.pathSeismicImage
+        elif(which == 'original'):
+            filpeath = self.pathOriginalImage
         else:
             print('not recognized target')
             return False, None
         with open(filepath, 'rb') as f:
             data = f.read()
             data_str = base64.b64encode(data).decode('utf-8')
-        return True, data_str
+            return True, data_str
 
     def plotTDResponse(self):
         h = None
@@ -243,5 +250,16 @@ class Filter:
             plt.plot(freq * self.sr /(2 * np.pi), 20 * np.log10(np.abs(resp)))
             plt.xlabel("Frequency")
             plt.ylabel("Amplitude")
-            plt.savefig("here.png", dpi=300)
+            plt.savefig(self.path_filter_alone, dpi=300)
+            return True, '--IIR alone: done'
+        elif self.responseType == 'FIR':
+            freq, resp = freqz(b=self.coeffs, a=1)
+            plt.plot(freq * self.sr /(2 * np.pi), 20 * np.log10(np.abs(resp)))
+            plt.xlabel("Frequency")
+            plt.ylabel("Amplitude")
+            plt.savefig(self.path_filer_alone, dpi=300)
+            return True, '--FIR alone: done'
+        else:
+            return False, 'not recognized filter'
+            
 

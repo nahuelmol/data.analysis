@@ -5,11 +5,10 @@ import numpy as np
 import segyio
 
 from io import BytesIO
-from scipy.signal import freqz, butter, firwin, ellip
-from segysak.segy import segy_header_scan, segy_header_scrape, segy_bin_scrape
 from segysak.segy import segy_loader
 
 from segprocess.Filter import Filter
+from segprocess.seganex import Seganex
 
 def convert_ascci(data):
     #waves = data.tobytes()
@@ -17,7 +16,7 @@ def convert_ascci(data):
     return str(data)
     
 def applyFFilter(data, params, new_dataset):
-    FILTER  = Filter(params) 
+    FILTER = Filter(params) 
     FILTER.set_filter()
     FILTER.set_coeffs()
     FILTER.set_target_dims(data)
@@ -34,17 +33,20 @@ def applyFFilter(data, params, new_dataset):
     FILTER.plotSegy(data, 'original')
     FILTER.write_segy(new_dataset)
     FILTER.plotSegy(new_dataset, 'processed')
-    fresponse_str = FILTER.exportGraph('Fresponse')
-    pole_zero_str = FILTER.exportGraph('poleZero')
-    tdresponse_str= FILTER.exportGraph('TDresponse')
-    #FILTER.exportGraph('seismic_image')
+
+    res, fresponse_str  = FILTER.exportGraph('Fresponse')
+    res, pole_zero_str  = FILTER.exportGraph('poleZero')
+    res, tdresponse_str = FILTER.exportGraph('TDresponse')
+    res, origi_png_str  = FILTER.exportGraph('original')
+    res, image_png_str  = FILTER.exportGraph('processed')
 
     new_dataset_str = convert_ascci(new_dataset)
     REPORT = {
         'freq_response': fresponse_str,
         'tdresponse':tdresponse_str,
         'pole_zero':pole_zero_str,
-        'image':new_dataset_str,
+        'original':origi_png_str,
+        'image':image_png_str
     }
     return True, REPORT
 
@@ -69,12 +71,8 @@ def segyProcess3d(data, params):
     #res, report = applyFFilter(data, params) #return res, report return False, None
 
 def FFilter(file):
-    file_in_bytes   = file.file
-    with open(self.temp, 'wb') as f:
-        f.write(file_in_bytes)
-    headers  = segy_header_scrape(temp, silent=True)
-    dt = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
-    file.params['sr'] = 1/dt
+    #with open(self.temp, 'wb') as f:
+    #    f.write(file.bins)
     n_inlines   = headers["INLINE_3D"].nunique() 
     n_xlines = headers["CROSSLINE_3D"].nunique() 
     if n_inlines == 1 and n_xlines == 1:
@@ -90,17 +88,10 @@ def NMOFilter(file):
     pass
 
 def analysis_exploratory(file):
-    with segyio.open(file.temp, 'r', ignore_geometry=True) as f:
-        dt = f.bin[segyio.BinField.Interval]
-        trace = f.trace[0]
-        N = len(trace)
-        frequencies = np.fft.rfftfreq(N, d=dt)
-        spectrum    = np.abs(np.fft.rfft(trace))
-        dominant    = frequencies[np.argmax(spectrum)]
+    ANEX = Seganex(file.temp) 
 
-        REPORT = {
-            'dominant_frequecy': dominant,
-        }
-        print(REPORT)
-        return True, REPORT
-    return False, {}
+    ANEX.metrics()
+    ANEX.plot_spec()
+    ANEX.export('spec')
+
+    return True, ANEX.report

@@ -1,4 +1,3 @@
-import segysak
 import filetype
 import base64
 import tarfile
@@ -12,21 +11,25 @@ from io import BytesIO
 from link.api.grapher import do2dGraph
 from link.api.data_analysis import PCAnalysis, ICAnalysis, Basics
 from segprocess.signal_processing import FFilter, analysis_exploratory, NMOFilter
+from segysak.segy import segy_header_scrape
 
 class File:
     def __init__(self, file, data):
         self.name   = file.name
         self.size   = file.size
-        self.file   = file.read()
+        self.bins   = file.read()
         self.extension = file.name.split(".")[-1]
         self.temp   = 'temp_file.{}'.format(self.extension)
+        self.dt     = None
+        self.sr     = None
+        self.ny     = None
 
         self.segy   = False
         self.csv    = False
         self.tsv    = False
         self.sep    = None
 
-        self.segy_params = ['anex','nmo', 'gain', 'fs', 'fc', 'filtertype', 'filtername', 
+        self.segy_params = ['anex','nmo', 'gain', 'fc', 'filtertype', 'filtername', 
                             'window', 'numtaps', 'order', 'convolve']
         self.stat_params = ['pca', 'ica', 'complete', 'basics', 'target', 'ncomps']
 
@@ -45,7 +48,6 @@ class File:
         self.convolve   = data.get('convolve')
 
         self.gain       = data.get('gain')
-        self.fs         = data.get('fs')
         self.cut_freq   = data.get('fc')
         self.filtertype = data.get('filtertype')
         self.filtername = data.get('filtername')
@@ -61,7 +63,11 @@ class File:
 
     def write_temp(self):
         with open(self.temp, 'wb') as f:
-            f.write(self.file)
+            f.write(self.bins)
+        headers  = segy_header_scrape(self.temp, silent=True)
+        self.params['dt'] = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
+        self.params['sr'] = 1.0 / self.params['dt']
+        self.params['ny'] = 0.5 * self.params['sr']
     def set_params(self, which):
         if which == 'stat':
             self.params['complete'] = self.complete
@@ -79,8 +85,7 @@ class File:
             self.params['anex']     = self.anex
             self.params['cut_freq'] = self.cut_freq
             self.params['window']   = self.window
-            self.params['fs']   = self.fs
-            self.params['gain'] = self.gain
+            self.params['gain']     = self.gain
             self.params['filtertype']   = self.filtertype
             self.params['filtername']   = self.filtername
             self.params['segy_type']    = self.extension
@@ -101,12 +106,12 @@ class File:
 
 
     def file_type(self):
-        kind = filetype.guess(self.file)
+        kind = filetype.guess(self.bins)
         if kind is None:
             self.issegy()
-            self.csv    = is_sv(self.file, ',')
-            self.tsv    = is_sv(self.file, '\t')
-            self.ssv    = is_sv(self.file, ' ')
+            self.csv    = is_sv(self.bins, ',')
+            self.tsv    = is_sv(self.bins, '\t')
+            self.ssv    = is_sv(self.bins, ' ')
         else:
             self.csv = False
             self.tsv = False
@@ -127,7 +132,7 @@ class File:
             self.report = {}
 
     def stat_reader(self):
-        bin_fl_object   = BytesIO(self.file) #binary file-like object
+        bin_fl_object   = BytesIO(self.bins) #binary file-like object
         data            = pd.read_csv(bin_fl_object, sep=self.sep, encoding='latin1')
         report = {}
         if self.complete == True:

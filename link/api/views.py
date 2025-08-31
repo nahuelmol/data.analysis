@@ -28,10 +28,7 @@ class CreateDataSet(APIView):
         data = json.loads(meta)
         file = request.FILES.get('file')
 
-        response = {
-                'data':None,
-                'status':None,
-        }
+        response = {}
         FILE = File(file, data)
         FILE.write_temp()
         FILE.read_file()
