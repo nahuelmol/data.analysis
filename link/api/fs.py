@@ -11,7 +11,7 @@ from io import BytesIO
 
 from link.api.grapher import do2dGraph
 from link.api.data_analysis import PCAnalysis, ICAnalysis, Basics
-from segprocess.signal_processing import FFilter
+from segprocess.signal_processing import FFilter, analysis_exploratory, NMOFilter
 
 class File:
     def __init__(self, file, data):
@@ -19,13 +19,14 @@ class File:
         self.size   = file.size
         self.file   = file.read()
         self.extension = file.name.split(".")[-1]
+        self.temp   = 'temp_file.{}'.format(self.extension)
 
         self.segy   = False
         self.csv    = False
         self.tsv    = False
         self.sep    = None
 
-        self.segy_params = ['nmo', 'gain', 'fs', 'fc', 'filtertype', 'filtername', 
+        self.segy_params = ['anex','nmo', 'gain', 'fs', 'fc', 'filtertype', 'filtername', 
                             'window', 'numtaps', 'order', 'convolve']
         self.stat_params = ['pca', 'ica', 'complete', 'basics', 'target', 'ncomps']
 
@@ -40,6 +41,7 @@ class File:
 
         self.ffilter    = data.get('ffilter')
         self.nmo        = data.get('nmo')
+        self.anex       = data.get('anex')
         self.convolve   = data.get('convolve')
 
         self.gain       = data.get('gain')
@@ -57,6 +59,9 @@ class File:
         self.target = data.get('target')
         self.ncomps = data.get('ncomps')
 
+    def write_temp(self):
+        with open(self.temp, 'wb') as f:
+            f.write(self.file)
     def set_params(self, which):
         if which == 'stat':
             self.params['complete'] = self.complete
@@ -71,6 +76,7 @@ class File:
             self.params['convolve'] = self.convolve
             self.params['ffilter']  = self.ffilter
             self.params['nmo']      = self.nmo
+            self.params['anex']     = self.anex
             self.params['cut_freq'] = self.cut_freq
             self.params['window']   = self.window
             self.params['fs']   = self.fs
@@ -97,7 +103,7 @@ class File:
     def file_type(self):
         kind = filetype.guess(self.file)
         if kind is None:
-            self.segy   = issegy(self.file)
+            self.issegy()
             self.csv    = is_sv(self.file, ',')
             self.tsv    = is_sv(self.file, '\t')
             self.ssv    = is_sv(self.file, ' ')
@@ -161,10 +167,13 @@ class File:
 
     def segy_reader(self):
         if self.params['nmo'] == True:
-            res, report = NMOfilter(self.file, self.params)
+            res, report = NMOfilter(self)
             self.report = report
         elif self.params['ffilter'] == True:
-            res, report = FFilter(self.file, self.params, self.extension)
+            res, report = FFilter(self)
+            self.report = report
+        elif self.params['anex'] == True:
+            res, report = analysis_exploratory(self)
             self.report = report
         else:
             print('nothing to process')
@@ -181,22 +190,12 @@ class File:
         with tarfile.open(fileobject, 'r:*') as tar_ref:
             tar_ref.extractall(extract_to)
 
-def isvalid_base64(s):
-    try:
-        base64.b64decode(s, validate=True)
-        return True
-    except Exception:
-        return False
-
-
-def issegy(bin_data):
-    try:
-        with open('temp.segy', 'wb') as f:
-            f.write(bin_data)
-        with segyio.open('temp.segy', 'r', ignore_geometry=True) as f:
-            return True
-    except Exception as e:
-        return False
+    def issegy(self):
+        try:
+            with segyio.open(self.temp, 'r', ignore_geometry=True) as f:
+                self.segy = True
+        except Exception as e:
+            self.segy = False
 
 def is_sv(bin_data, sep):
     text = bin_data.decode("utf-8", errors="ignore")

@@ -33,6 +33,7 @@ class CreateDataSet(APIView):
                 'status':None,
         }
         FILE = File(file, data)
+        FILE.write_temp()
         FILE.read_file()
         if FILE.report != {}:
             response['report'] = FILE.report

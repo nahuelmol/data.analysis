@@ -2,6 +2,7 @@ import scipy
 import base64
 import xarray as xr
 import numpy as np
+import segyio
 
 from io import BytesIO
 from scipy.signal import freqz, butter, firwin, ellip
@@ -67,33 +68,39 @@ def segyProcess3d(data, params):
     print(info)
     #res, report = applyFFilter(data, params) #return res, report return False, None
 
-def FFilter(file, params, extension):
-    print('\n{}\n'.format(extension))
-    temp_file = 'temp_file.{}'.format(extension)
-    with open(temp_file, 'wb') as f:
-        f.write(file)
-    headers  = segy_header_scrape(temp_file, silent=True)
+def FFilter(file):
+    file_in_bytes   = file.file
+    with open(self.temp, 'wb') as f:
+        f.write(file_in_bytes)
+    headers  = segy_header_scrape(temp, silent=True)
     dt = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
-    params['sr'] = 1/dt
+    file.params['sr'] = 1/dt
     n_inlines   = headers["INLINE_3D"].nunique() 
     n_xlines = headers["CROSSLINE_3D"].nunique() 
     if n_inlines == 1 and n_xlines == 1:
-        loader  = segy_loader(temp_file)
-        res, report = segyProcess2d(loader.data, params)
+        loader  = segy_loader(temp)
+        res, report = segyProcess2d(loader.data, file.params)
         return res, report
     else:
         print("thinkin on 3d")
         #res, report = segyProcess3d(data, params)
     return False, {}
-    """
-    if(len(loader.data.dims) == 2):
-    elif(len(loader.data.dims) == 3):
-        res, report = segyProcess3d(loader.data, params)
-        return res, report
-    else:
-        print('unrecognized dimension')
-        return False, None
-    """
 
-def NMOFilter(file, params):
+def NMOFilter(file):
     pass
+
+def analysis_exploratory(file):
+    with segyio.open(file.temp, 'r', ignore_geometry=True) as f:
+        dt = f.bin[segyio.BinField.Interval]
+        trace = f.trace[0]
+        N = len(trace)
+        frequencies = np.fft.rfftfreq(N, d=dt)
+        spectrum    = np.abs(np.fft.rfft(trace))
+        dominant    = frequencies[np.argmax(spectrum)]
+
+        REPORT = {
+            'dominant_frequecy': dominant,
+        }
+        print(REPORT)
+        return True, REPORT
+    return False, {}
