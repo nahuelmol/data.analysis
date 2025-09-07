@@ -13,6 +13,9 @@ class Filter:
         self.ntraces = None 
         self.nsamples= None
 
+        self.dims = []
+        self.ndims= 0
+
         self.order  = params['order']
         self.type   = params['filtername']
         self.sr     = params['sr']
@@ -39,6 +42,7 @@ class Filter:
         self.responseType   = None
         self.setResponse()
         self.worN           = None
+
         if(self.responseType == 'FIR'):
             self.coeffs = 0.0
         elif(self.responseType == 'IIR'):
@@ -76,6 +80,9 @@ class Filter:
 
     def set_target_dims(self, data):
         self.ntraces, self.nsamples = data.shape
+        self.dims = data.shape.tolist()
+        self.ndims = len(self.dims)
+        print('dims: {}\nndims: {}'.format(self.dims, self.ndims))
         print('ntraces: {} - nsamples: {}'.format(self.ntraces, self.nsamples))
 
     def set_coeffs(self):

@@ -65,6 +65,8 @@ class File:
         with open(self.temp, 'wb') as f:
             f.write(self.bins)
         headers  = segy_header_scrape(self.temp, silent=True)
+        self.params['iline_3d'] = headers['INLINE_3D'] 
+        self.params['xline_3d'] = headers['CROSSLINE_3D']
         self.params['dt'] = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
         self.params['sr'] = 1.0 / self.params['dt']
         self.params['ny'] = 0.5 * self.params['sr']

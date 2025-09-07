@@ -71,10 +71,8 @@ def segyProcess3d(data, params):
     #res, report = applyFFilter(data, params) #return res, report return False, None
 
 def FFilter(file):
-    #with open(self.temp, 'wb') as f:
-    #    f.write(file.bins)
-    n_inlines   = headers["INLINE_3D"].nunique() 
-    n_xlines = headers["CROSSLINE_3D"].nunique() 
+    n_inlines   = self.params["iline_3d"].nunique() 
+    n_xlines    = self.params["xline_3d"].nunique() 
     if n_inlines == 1 and n_xlines == 1:
         loader  = segy_loader(temp)
         res, report = segyProcess2d(loader.data, file.params)

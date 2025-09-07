@@ -32,6 +32,7 @@ class CreateDataSet(APIView):
         FILE = File(file, data)
         FILE.write_temp()
         FILE.read_file()
+
         if FILE.report != {}:
             response['report'] = FILE.report
             response['msg'] = f"File processed"
