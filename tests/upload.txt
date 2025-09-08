@@ -1,6 +1,6 @@
 url = "http://127.0.0.1:8000/api/create-data-set"
 request = POST
---form "metadata={\"username\":\"nahuel\",\"nmo\":false,\"anex\":true,\"ffilter\":false,\"fc\":25,\"order\":15,\"filtertype\":\"low\",\"filtername\":\"butterworth\",\"fs\":1000,\"gain\":[1,0],\"window\":\"hamming\",\"numtaps\":101};type=application/json"
+--form "metadata={\"username\":\"nahuel\",\"nmo\":false,\"anex\":false,\"ffilter\":true,\"fc\":7,\"order\":15,\"filtertype\":\"low\",\"filtername\":\"butterworth\",\"fs\":1000,\"gain\":[1,0],\"window\":\"hamming\",\"numtaps\":101};type=application/json"
 
 # --form "file=@3D_gathers_pstm_nmo.sgy"
 --form "file=@Line_301_PSTM_Stack_Enh.segy"

@@ -20,8 +20,9 @@ def applyFFilter(data, params, new_dataset):
     FILTER.set_filter()
     FILTER.set_coeffs()
     FILTER.set_target_dims(data)
+    
     for i in range(FILTER.ntraces):
-        signal = data.isel(cdp=i)
+        signal = data.isel({data.dims[0]:i})
         filtered = FILTER.apply(signal)
         new_dataset[dict(trace=i)] = filtered
 
@@ -71,10 +72,10 @@ def segyProcess3d(data, params):
     #res, report = applyFFilter(data, params) #return res, report return False, None
 
 def FFilter(file):
-    n_inlines   = self.params["iline_3d"].nunique() 
-    n_xlines    = self.params["xline_3d"].nunique() 
-    if n_inlines == 1 and n_xlines == 1:
-        loader  = segy_loader(temp)
+    nil     = file.params["iline_3d"].nunique() 
+    nxl     = file.params["xline_3d"].nunique() 
+    if nil == 1 and nxl == 1:
+        loader  = segy_loader(file.temp)
         res, report = segyProcess2d(loader.data, file.params)
         return res, report
     else:

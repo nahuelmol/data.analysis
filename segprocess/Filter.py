@@ -80,10 +80,7 @@ class Filter:
 
     def set_target_dims(self, data):
         self.ntraces, self.nsamples = data.shape
-        self.dims = data.shape.tolist()
-        self.ndims = len(self.dims)
-        print('dims: {}\nndims: {}'.format(self.dims, self.ndims))
-        print('ntraces: {} - nsamples: {}'.format(self.ntraces, self.nsamples))
+        self.dims = data.dims
 
     def set_coeffs(self):
         if (isinstance(self.coeffs, tuple)):
@@ -107,7 +104,6 @@ class Filter:
 
     def apply(self, signal):
         if(self.start == False):
-            print('unique')
             self.nsamples = len(signal)
             self.start = True
         if(self.responseType == 'IIR'):
@@ -130,7 +126,7 @@ class Filter:
         elif(which == 'processed'):
             filepath = self.pathSeismicImage
         elif(which == 'original'):
-            filpeath = self.pathOriginalImage
+            filepath = self.pathOriginalImage
         else:
             print('not recognized target')
             return False, None
