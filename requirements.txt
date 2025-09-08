@@ -18,6 +18,7 @@ filetype==1.2.0
 fonttools==4.57.0
 fsspec==2025.3.0
 gunicorn==23.0.0
+h11==0.16.0
 h5netcdf==1.1.0
 h5py==2.10.0
 idna==3.10
@@ -60,6 +61,7 @@ tqdm==4.67.1
 typing-extensions==4.13.2
 tzdata==2025.2
 urllib3==2.2.3
+uvicorn==0.33.0
 waitress==3.0.0
 whitenoise==6.7.0
 xarray==2023.1.0
