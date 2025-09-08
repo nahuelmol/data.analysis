@@ -85,3 +85,12 @@ which are in
 * https://pypi.org/project/numpy/1.21.4/#files
 * https://pypi.org/project/scipy/1.5.4/#files
 
+
+### testing
+
+Curl is used for sending multipart forms through upload.txt typing:
+
+```
+curl -K tests/upload.txt
+```
+
