@@ -27,6 +27,7 @@ class File:
         self.segy   = False
         self.csv    = False
         self.tsv    = False
+        self.zip    = False
         self.sep    = None
 
         self.segy_params = ['anex','nmo', 'gain', 'fc', 'filtertype', 'filtername', 
@@ -70,6 +71,7 @@ class File:
         self.params['dt'] = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
         self.params['sr'] = 1.0 / self.params['dt']
         self.params['ny'] = 0.5 * self.params['sr']
+
     def set_params(self, which):
         if which == 'stat':
             self.params['complete'] = self.complete
@@ -92,7 +94,7 @@ class File:
             self.params['filtername']   = self.filtername
             self.params['segy_type']    = self.extension
         elif which == 'zip':
-            print('idk')
+            print('params are all False or None, should I set them?')
         else:
             print('not found file type')
 
@@ -106,7 +108,6 @@ class File:
         else:
             print('not separator')
 
-
     def file_type(self):
         kind = filetype.guess(self.bins)
         if kind is None:
@@ -114,11 +115,18 @@ class File:
             self.csv    = is_sv(self.bins, ',')
             self.tsv    = is_sv(self.bins, '\t')
             self.ssv    = is_sv(self.bins, ' ')
+        elif kind.extension == 'zip':
+            self.zip    = True
+            self.csv    = False
+            self.tsv    = False
+            self.segy   = False
+            self.ssv    = False
         else:
-            self.csv = False
-            self.tsv = False
-            self.segy = False
-            self.ssv = False
+            self.zip    = False
+            self.csv    = False
+            self.tsv    = False
+            self.segy   = False
+            self.ssv    = False
 
     def read_file(self):
         self.file_type()
@@ -129,9 +137,13 @@ class File:
         elif (self.segy == True):
             self.set_params('segy')
             self.segy_reader()
+        elif (self.zip == True):
+            self.set_params('zip')
+            self.zip_reader()
         else:
             self.params = {}
             self.report = {}
+            print("unrecognized file")
 
     def stat_reader(self):
         bin_fl_object   = BytesIO(self.bins) #binary file-like object
@@ -188,10 +200,11 @@ class File:
 
     def dat_reader(self):
         pass
+
     def zip_reader(self):
         #unzip(file_str)
-        #return True 
-        pass    
+        print("zip reading")
+        return True 
     
     def tar_reader(self):
         with tarfile.open(fileobject, 'r:*') as tar_ref:

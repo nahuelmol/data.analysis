@@ -4,15 +4,16 @@ from io import BytesIO
 import filetype
 
 def unzip(file_str):
-    bytes_file = base64.b64decode(file_str)
-    file_like = BytesIO(bytes_file)
-    kind = filetype.guess(bytes_file)
+    file_byte = base64.b64decode(file_str)
+    file_like = BytesIO(file_byte)
+    kind = filetype.guess(bytes_byte)
     if kind:
         if kind.extension != 'zip':
-            return False, 'incorrect file type'
+            return False, 'ERR: incorrect file type'
     else:
-        return False, 'not a format'
-    with zipfile.ZipFile(file_like, 'r') as zip_ref: #bytes_file must be a file-like object
+        return False, 'ERR: is not possible to read the extension'
+
+    with zipfile.ZipFile(file_like, 'r') as zip_ref: #file_byte must be a file-like object
         content_list = zip_ref.namelist()
         with zip_ref.open(content_list[0]) as f:
             file_data = f.read()

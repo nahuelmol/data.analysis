@@ -24,7 +24,7 @@ def DecisionTree(data, params):
     y = (data[col] == target) # =0 if C, =1 if G 
 
     TREE = DecisionTreeClassifier(max_depth=1).fit(X, y) #finds the bias
-    predictions = TREE.predict(X)
+    predictions = TREE.predict(X).tolist()
 
     ass = accuracy_score(y, TREE.predict(X))
     REPORT = {
@@ -35,7 +35,6 @@ def DecisionTree(data, params):
     return REPORT
 
 def Logistic(data, params):
-
     random_state    = params['random_state'] #42
     test_size       = params['test_size'] #0.2
     y = data.pop(params['target'])
@@ -58,8 +57,9 @@ def Logistic(data, params):
     #taking y_test values with those predicted by the model
     cm = confusion_matrix(y_test, predictions)
     ass = accuracy_score(y_test, predictions)
-    mc = model.coef_
-    mi = model.intercept_
+    mc = model.coef_.tolist()
+    mi = model.intercept_.tolist()
+
     REPORT = {
         'model_coef': mc,
         'model_intercept': mi,
@@ -69,7 +69,5 @@ def Logistic(data, params):
         'model':model
     }
     return REPORT
-
-
 
 
