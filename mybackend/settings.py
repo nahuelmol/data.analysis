@@ -10,6 +10,7 @@ DEBUG = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1000000000
 
 ALLOWED_HOSTS = [
+        'littlegamesite.onrender.com',
         'mybackend-234b.onrender.com',
         '127.0.0.1',
         'localhost'
