@@ -11,18 +11,24 @@
 This backend will receive .seg files
 and process them by using different. Python is chosen for the implementation, taking advantage of its capabilities in data analysis.
 
-Beyond seismic files, spreadsheets (.csv .tsv .xlsx) will be also studied applying data analysis techniques to reveal hidden patterns not evident at first glance.
+Beyond seismic files, spreadsheet files (.csv .tsv .xlsx) will be also studied by applying data analysis techniques.
 
 ## Specialized libraries
-In addition to Python's data analysis tools, specialized libraries are used to handle SEG files. Examples are:
 
-*segysak
+Well known data analysis tools will be used on the backend, like:
 
-*segyio
+*  numpy
+*  pandas
+*  scipy
 
-Once a SEGY file arrives to the server, varied chart image are generated in .png format. The type of processing can be selected, then the number of those images vary. 
+In addition to Python's data analysis tools, specialized libraries are used to handle SEG files, for example:
 
-Being a APIrest based on json, png files must be converted to string files and finally be injected to the response json.
+*  segysak
+*  segyio
+
+Once a SEGY file arrives to the server, chart images are generated in .png format. The way to process it can be selected, mofifying the number of these images.
+
+Being an APIrest based on json, png files must be converted to string files and finally be injected to the response json.
 
 ## Running the server
 
@@ -47,14 +53,15 @@ The development server is built for debugging and fast tests, not for production
 
 That's why waitress is used. This wsgi server is robust and estable for handling heavy files uploading, being able to process chunks more efficiently, avoiding the overuse of Windows buffers and preventing related issues.
 
-As alternative to the above commad, a sever.py file can be used.
+As an alternative to the above commad, a sever.py file can be used.
 
 ```
 python serve.py
 ```
 
 ### Remote setting
-Pushing with personal access token.
+
+Pushing by using access token:
 
 ```
 git remote set-url origin https://TOKEN@github.com/OWNER/REPOSITORY.git
@@ -62,7 +69,7 @@ git remote set-url origin https://TOKEN@github.com/OWNER/REPOSITORY.git
 
 ### Old versions
 
-For CPU older versions like windows 7 32 bits, older libraries were used. Thid is the case of Pandas, Numpy, Scipy, h5py, among others. Which can be installed with pip by indicating their specific version:
+For older versions like mine, which is a windows 7 32 bits, older libraries are used. This is the case of Pandas, Numpy, Scipy, h5py, among others. These can be installed using the pip tool, indicating the specific version:
 
 ```
 pip install pandas==1.3.4
@@ -88,7 +95,7 @@ which are in
 
 ### testing
 
-Curl is used for sending multipart forms through upload.txt typing:
+Curl is used to send multipart forms using a plain file test, called upload.txt in this case, by typinh the following command:
 
 ```
 curl -K tests/upload.txt
