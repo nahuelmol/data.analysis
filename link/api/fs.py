@@ -2,6 +2,7 @@ import filetype
 import base64
 import tarfile
 import segyio
+import zipfile
 
 import pandas as pd
 import xarray as xr
@@ -65,12 +66,6 @@ class File:
     def write_temp(self):
         with open(self.temp, 'wb') as f:
             f.write(self.bins)
-        headers  = segy_header_scrape(self.temp, silent=True)
-        self.params['iline_3d'] = headers['INLINE_3D'] 
-        self.params['xline_3d'] = headers['CROSSLINE_3D']
-        self.params['dt'] = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
-        self.params['sr'] = 1.0 / self.params['dt']
-        self.params['ny'] = 0.5 * self.params['sr']
 
     def set_params(self, which):
         if which == 'stat':
@@ -128,7 +123,7 @@ class File:
             self.segy   = False
             self.ssv    = False
 
-    def read_file(self):
+    def read(self):
         self.file_type()
         if (self.csv == True or self.tsv == True or self.ssv == True):
             self.set_sep()
@@ -185,6 +180,13 @@ class File:
             self.report = {}
 
     def segy_reader(self):
+        headers  = segy_header_scrape(self.temp, silent=True)
+        self.params['iline_3d'] = headers['INLINE_3D'] 
+        self.params['xline_3d'] = headers['CROSSLINE_3D']
+        self.params['dt'] = (headers['TRACE_SAMPLE_INTERVAL'].mean()) / 1000000
+        self.params['sr'] = 1.0 / self.params['dt']
+        self.params['ny'] = 0.5 * self.params['sr']
+
         if self.params['nmo'] == True:
             res, report = NMOfilter(self)
             self.report = report
@@ -202,8 +204,12 @@ class File:
         pass
 
     def zip_reader(self):
-        #unzip(file_str)
-        print("zip reading")
+        #unzip(self.temp)
+        finaldestination = 'extracted'
+        with zipfile.ZipFile(self.temp, 'r') as f:
+            f.extractall(finaldestination)
+            print('unziping completed')
+        
         return True 
     
     def tar_reader(self):

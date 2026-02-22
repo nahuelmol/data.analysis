@@ -30,8 +30,8 @@ class CreateDataSet(APIView):
 
         response = {}
         FILE = File(file, data)
-        FILE.read_file()
-        #FILE.write_temp()
+        FILE.write_temp()
+        FILE.read()
 
         if FILE.report != {}:
             response['report'] = FILE.report
