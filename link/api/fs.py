@@ -11,7 +11,7 @@ from io import BytesIO
 
 from link.api.grapher import do2dGraph
 from link.api.data_analysis import PCAnalysis, ICAnalysis, Basics
-from segprocess.signal_processing import FFilter, analysis_exploratory, NMOFilter
+from segprocess.signal_processing import FFilter, exploratory_analysis, NMOFilter
 from segysak.segy import segy_header_scrape
 
 class File:
@@ -201,7 +201,13 @@ class File:
             self.report = {}
 
     def dat_reader(self):
-        pass
+        #model builder
+        bin_fl_object   = BytesIO(self.bins)
+        data            = pd.read_csv(bin_fl_object, sep=self.sep, encoding='latin1')
+        MODEL = ClassificationModel(data)
+        MODEL.logistic_regression()
+        self.report = MODEL.report
+        print(self.report)
 
     def zip_reader(self):
         #unzip(self.temp)

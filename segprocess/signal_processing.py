@@ -86,7 +86,7 @@ def FFilter(file):
 def NMOFilter(file):
     pass
 
-def analysis_exploratory(file):
+def exploratory_analysis(file):
     ANEX = Seganex(file.temp) 
 
     ANEX.metrics()
