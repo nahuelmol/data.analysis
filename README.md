@@ -93,9 +93,9 @@ which are in
 * https://pypi.org/project/scipy/1.5.4/#files
 
 
-### testing
+### Testing
 
-Curl is used to send multipart forms using a plain file test, called upload.txt in this case, by typinh the following command:
+Curl is used for sending multipart forms by reading a plain file, called upload.txt in this case, that has a modelo of an specific request:
 
 ```
 curl -K tests/upload.txt
