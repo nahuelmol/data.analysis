@@ -15,7 +15,7 @@ from segprocess.signal_processing import FFilter, exploratory_analysis, NMOFilte
 from segysak.segy import segy_header_scrape
 
 class File:
-    def __init__(self, file, data):
+    def __init__(self, file, metadata):
         self.name   = file.name
         self.size   = file.size
         self.bins   = file.read()
@@ -31,37 +31,35 @@ class File:
         self.zip    = False
         self.sep    = None
 
-        self.segy_params = ['anex','nmo', 'gain', 'fc', 'filtertype', 'filtername', 
-                            'window', 'numtaps', 'order', 'convolve']
-        self.stat_params = ['pca', 'ica', 'complete', 'basics', 'target', 'ncomps']
+        #self.segy_params = ['anex','nmo', 'gain', 'fc', 'filtertype', 'filtername', 
+        #                   'window', 'numtaps', 'order', 'convolve']
+        self.available_stat_params = ['pca', 'ica', 'complete', 'basics', 'target', 'ncomps']
 
         self.params = {}
         self.report = {}
         
-        self.basics = data.get('basics')
-        self.complete = data.get('complete')
-        self.pca = data.get('pca')
-        self.ica = data.get('ica')
-        self.nothing = False
+        self.nothing    = False
 
-        self.ffilter    = data.get('ffilter')
-        self.nmo        = data.get('nmo')
-        self.anex       = data.get('anex')
-        self.convolve   = data.get('convolve')
 
-        self.gain       = data.get('gain')
-        self.cut_freq   = data.get('fc')
-        self.filtertype = data.get('filtertype')
-        self.filtername = data.get('filtername')
-        self.window     = data.get('window')
-        self.numtaps    = data.get('numtaps')
-        self.order      = data.get('order')
+        for param in self.available_stat_params:
+            if param in META:
+                self.params[param] = META.get(param)
 
-        self.xdata = data.get('xdata')
-        self.ydata = data.get('ydata')
+        #self.ffilter    = META.get('ffilter')
+        #self.nmo        = META.get('nmo')
+        #self.anex       = META.get('anex')
+        #self.convolve   = META.get('convolve')
 
-        self.target = data.get('target')
-        self.ncomps = data.get('ncomps')
+        #self.gain       = META.get('gain')
+        #self.cut_freq   = META.get('fc')
+        #self.filtertype = META.get('filtertype')
+        #self.filtername = META.get('filtername')
+        #self.window     = META.get('window')
+        #self.numtaps    = META.get('numtaps')
+        #self.order      = META.get('order')
+
+        self.xdata  = META.get('xdata')
+        self.ydata  = META.get('ydata')
 
     def write_temp(self):
         with open(self.temp, 'wb') as f:
@@ -75,19 +73,19 @@ class File:
             self.params['ica'] = self.ica
             self.params['target'] = self.target
             self.params['ncomps'] = self.ncomps
-        elif which== 'segy':
-            self.params['order']    = self.order
-            self.params['numtaps']  = self.numtaps
-            self.params['convolve'] = self.convolve
-            self.params['ffilter']  = self.ffilter
-            self.params['nmo']      = self.nmo
-            self.params['anex']     = self.anex
-            self.params['cut_freq'] = self.cut_freq
-            self.params['window']   = self.window
-            self.params['gain']     = self.gain
-            self.params['filtertype']   = self.filtertype
-            self.params['filtername']   = self.filtername
-            self.params['segy_type']    = self.extension
+        #elif which== 'segy':
+        #    self.params['order']    = self.order
+        #    self.params['numtaps']  = self.numtaps
+        #    self.params['convolve'] = self.convolve
+        #    self.params['ffilter']  = self.ffilter
+        #    self.params['nmo']      = self.nmo
+        #    self.params['anex']     = self.anex
+        #    self.params['cut_freq'] = self.cut_freq
+        #    self.params['window']   = self.window
+        #    self.params['gain']     = self.gain
+        #    self.params['filtertype']   = self.filtertype
+        #    self.params['filtername']   = self.filtername
+        #    self.params['segy_type']    = self.extension
         elif which == 'zip':
             print('params are all False or None, should I set them?')
         else:
@@ -130,8 +128,9 @@ class File:
             self.set_params('stat')
             self.stat_reader()
         elif (self.segy == True):
-            self.set_params('segy')
-            self.segy_reader()
+            print('SEG files are not longer supported')
+        #    self.set_params('segy')
+        #    self.segy_reader()
         elif (self.zip == True):
             self.set_params('zip')
             self.zip_reader()

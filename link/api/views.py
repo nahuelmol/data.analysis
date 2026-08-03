@@ -25,11 +25,11 @@ class CreateDataSet(APIView):
             }
             return Response(response)
         meta = request.data.get('metadata')
-        data = json.loads(meta)
+        metadata = json.loads(meta)
         file = request.FILES.get('file')
 
         response = {}
-        FILE = File(file, data)
+        FILE = File(file, metadata)
         FILE.write_temp()
         FILE.read()
 
